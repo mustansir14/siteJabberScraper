@@ -1,7 +1,10 @@
-CREATE TABLE `company` (
+CREATE DATABASE IF NOT EXISTS site_jabber;
+
+CREATE TABLE IF NOT EXISTS `company` (
   `company_id` varchar(255) NOT NULL,
   `company_name` varchar(255) NOT NULL,
   `url` varchar(500) NOT NULL,
+  `logo` varchar(255) DEFAULT NULL,
   `category1` varchar(255) DEFAULT NULL,
   `category2` varchar(255) DEFAULT NULL,
   `category3` varchar(255) DEFAULT NULL,
@@ -27,15 +30,15 @@ CREATE TABLE `company` (
   PRIMARY KEY (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
-CREATE TABLE `review` (
+CREATE TABLE IF NOT EXISTS `review` (
   `review_id` int NOT NULL AUTO_INCREMENT,
   `company_id` varchar(255) NOT NULL,
-  `review_date` date NOT NULL,
+  `review_date` date DEFAULT NULL,
   `username` varchar(255) NOT NULL,
   `no_of_helpful_votes` int NOT NULL,
   `review_title` varchar(255) NOT NULL,
   `review_text` text,
-  `review_stars` decimal(2,1) NOT NULL,
+  `review_stars` decimal(2,1) DEFAULT NULL,
   `date_created` datetime DEFAULT NULL,
   `date_updated` datetime DEFAULT NULL,
   `status` varchar(7) DEFAULT NULL,
@@ -43,4 +46,4 @@ CREATE TABLE `review` (
   PRIMARY KEY (`review_id`),
   KEY `company_id` (`company_id`),
   CONSTRAINT `review_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`company_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=78366 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
