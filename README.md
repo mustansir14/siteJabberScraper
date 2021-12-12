@@ -14,12 +14,16 @@
    If for some reason the script stops during the scrape, on restart the script will read from these files and continue from where it left off.
    If you wish to start from the beginning, simply delete these files.
 
---- API Server ---
-run api_server.py to start the server.
+## API Server
 
-Endpoints:
+Run api_server.py to start the server.
+
+### Endpoints:
+
 [GET] /api/v1/regrab-company
+
 parameters: id (id of the company), webhookUrl (url to post after finishing scraping)
 
 [GET] /api/v1/regrab-review
+
 parameters: id (id of the review), webhookUrl (url to post after finishing scraping)
