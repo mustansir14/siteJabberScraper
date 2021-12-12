@@ -2,3 +2,4 @@ category_urls.json
 last_scrape_info.json
 file
 test_webhook.py
+__pycache__

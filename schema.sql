@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `company` (
   `category2` varchar(255) DEFAULT NULL,
   `category3` varchar(255) DEFAULT NULL,
   `email` varchar(320) DEFAULT NULL,
-  `phone` varchar(15) DEFAULT NULL,
+  `phone` varchar(18) DEFAULT NULL,
   `street_address1` varchar(255) DEFAULT NULL,
   `street_address2` varchar(255) DEFAULT NULL,
   `city` varchar(255) DEFAULT NULL,
