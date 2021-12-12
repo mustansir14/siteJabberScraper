@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `company` (
   `street_address2` varchar(255) DEFAULT NULL,
   `city` varchar(255) DEFAULT NULL,
   `state` varchar(255) DEFAULT NULL,
-  `zip_code` varchar(12) DEFAULT NULL,
+  `zip_code` varchar(255) DEFAULT NULL,
   `country` varchar(255) DEFAULT NULL,
   `wikipedia_url` varchar(500) DEFAULT NULL,
   `facebook_url` varchar(500) DEFAULT NULL,
