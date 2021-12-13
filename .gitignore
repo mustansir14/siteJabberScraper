@@ -3,3 +3,4 @@ last_scrape_info.json
 file
 test_webhook.py
 __pycache__
+config.py

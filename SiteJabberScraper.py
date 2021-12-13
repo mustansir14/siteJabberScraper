@@ -210,7 +210,7 @@ class SiteJabberScraper():
         return reviews
 
 
-    def bulk_scrape(self, get_urls_from_file=False, continue_from_last_scrape=False):
+    def bulk_scrape(self, get_urls_from_file=False, continue_from_last_scrape=False, skip_if_exists=False):
  
         if get_urls_from_file:
             with open("category_urls.json", "r") as f:
@@ -250,6 +250,11 @@ class SiteJabberScraper():
                         url_flag = True
                         continue
                     if url_flag:
+
+                        if skip_if_exists:
+                            self.db.cur.execute("SELECT * from company where url = %s;", (company_url))
+                            if len(self.db.cur.fetchall()) > 0:
+                                continue
 
                         self.scrape_url(company_url)
                         

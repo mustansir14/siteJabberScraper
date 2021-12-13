@@ -1,16 +1,23 @@
-import pymysql
+from config import *
 from typing import List
 from models import Company, Review
 import datetime
+if USE_MARIA_DB:
+    import mariadb
+else:
+    import pymysql
 
 class DB:
 
     def __init__(self):
-        self.host = "127.0.0.1"
-        self.user = "root"
-        self.password = "12345678"
-        self.db = "site_jabber"
-        self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
+        self.host = DB_HOST
+        self.user = DB_USER
+        self.password = DB_PASSWORD
+        self.db = DB_NAME
+        if USE_MARIA_DB:
+            self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
+        else:
+            self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
         self.cur = self.con.cursor()
 
     def insert_or_update_company(self, company : Company):
