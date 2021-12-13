@@ -275,7 +275,7 @@ class SiteJabberScraper():
                     if name[-1] == ")":
                         name = " ".join(name.split()[:-1])
                     url = category.find_element_by_tag_name("a").get_attribute("href")
-                    if name not in (self.__total_categories_urls.keys()):
+                    if name not in list(self.__total_categories_urls.keys()):
                         self.__total_categories_urls[name] = url
                     return
             except:
