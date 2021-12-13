@@ -271,11 +271,12 @@ class SiteJabberScraper():
         else:
             try:
                 if category.text.strip()[-1] == ")" or category.find_element_by_tag_name("a").get_attribute("href") != "https://www.sitejabber.com/categories#":
-                    name = category.text.strip().split()
+                    name = category.text.strip()
                     if name[-1] == ")":
                         name = " ".join(name.split()[:-1])
                     url = category.find_element_by_tag_name("a").get_attribute("href")
                     if name not in list(self.__total_categories_urls.keys()):
+                        print("Got Category:", name)
                         self.__total_categories_urls[name] = url
                     return
             except:
