@@ -56,6 +56,7 @@ class Review:
         self.review_title = None
         self.review_text = None
         self.review_stars = None
+        self.review_page_no = None
         self.log = ""
         self.status = None
 
@@ -67,4 +68,5 @@ class Review:
         return_string  += "\nReview Stars: " + str(self.review_stars)
         return_string  += "\nReview Title: " + self.review_title
         return_string  += "\nReview Text: " + self.review_text
+        return_string  += "\nReview Page No: " + str(self.review_page_no)
         return return_string

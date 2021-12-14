@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS `review` (
   `review_title` varchar(255) NOT NULL,
   `review_text` text,
   `review_stars` decimal(2,1) DEFAULT NULL,
+  `review_page_no` int DEFAULT NULL,
   `date_created` datetime DEFAULT NULL,
   `date_updated` datetime DEFAULT NULL,
   `status` varchar(7) DEFAULT NULL,

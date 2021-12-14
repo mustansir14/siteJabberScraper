@@ -185,6 +185,7 @@ class SiteJabberScraper():
                     except:
                         review.status = "error"
                         review.log += "error while scraping review stars\n"
+                    review.review_page_no = page
                     reviews.append(review)
                     if scrape_specific_review:
                         got_review = True
