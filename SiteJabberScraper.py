@@ -358,13 +358,13 @@ if __name__ == '__main__':
     parser.add_argument("--urls", nargs='*', help="url(s) for scraping. Separate by spaces")
     parser.add_argument("--save_to_db", nargs='?', type=bool, default=False, help="Boolean variable to save to db. Default False")
     if len(sys.argv) == 1:
-        parser.log_help(sys.stderr)
+        parser.print_help(sys.stderr)
         sys.exit(1)
     args = parser.parse_args()
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
-            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True)
+            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, skip_if_exists=True)
         elif os.path.isfile("category_urls.json"):
             scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=False)
         elif os.path.isfile("last_scrape_info.json"):
