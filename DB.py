@@ -58,15 +58,15 @@ class DB:
                     review_id = fetched_results[0][0]
                 else:
                     review_id = fetched_results[0]["review_id"]
-                sql = """UPDATE review SET no_of_helpful_votes = %s, review_title = %s, review_text = %s, review_stars = %s, 
+                sql = """UPDATE review SET no_of_helpful_votes = %s, review_title = %s, review_text = %s, review_stars = %s, review_page_no = %s,
                 date_updated = %s , status = %s, log = %s where review_id = %s"""
-                args = (review.no_of_helpful_votes, review.review_title, review.review_text, review.review_stars, 
+                args = (review.no_of_helpful_votes, review.review_title, review.review_text, review.review_stars, review.review_page_no,
                 datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), review.status, review.log, review_id)
             else:    
-                sql = """INSERT INTO review (company_id, review_date, username, no_of_helpful_votes, review_title, review_text, review_stars, 
+                sql = """INSERT INTO review (company_id, review_date, username, no_of_helpful_votes, review_title, review_text, review_stars, review_page_no,
                 date_created, date_updated, status, log) VALUES (""" + "%s, " * 10 + "%s);"
                 args = (review.company_id, review.date, review.username, review.no_of_helpful_votes, review.review_title, review.review_text, 
-                review.review_stars, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
+                review.review_stars, review.review_page_no, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
                 review.status, review.log)
             self.cur.execute(sql, args)
         
