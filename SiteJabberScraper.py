@@ -167,6 +167,7 @@ class SiteJabberScraper():
                     try:
                         review.review_title = review_content.find_element_by_class_name("review__title__text").text.strip()
                     except:
+                        review.review_title = ""
                         review.status = "error"
                         review.log += "error while scraping review title\n"
                     try:
