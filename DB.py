@@ -6,6 +6,7 @@ if USE_MARIA_DB:
     import mariadb
 else:
     import pymysql
+import logging
 
 class DB:
 
@@ -43,7 +44,7 @@ class DB:
             success_statement = "Company " + company.id + " details added to DB successfully!"
         self.cur.execute(sql, args)
         self.con.commit()
-        print(success_statement)
+        logging.info(success_statement)
 
     def insert_or_update_reviews(self, reviews : List[Review]):
         
@@ -67,7 +68,7 @@ class DB:
         
         if reviews:
             self.con.commit()
-            print("Company " + review.company_id + " reviews added/updated to DB successfully!")
+            logging.info("Company " + review.company_id + " reviews added/updated to DB successfully!")
 
     
 
