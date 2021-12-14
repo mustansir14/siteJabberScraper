@@ -364,7 +364,7 @@ if __name__ == '__main__':
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
-            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, skip_if_exists=True)
+            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True)
         elif os.path.isfile("category_urls.json"):
             scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=False)
         elif os.path.isfile("last_scrape_info.json"):
