@@ -3,6 +3,7 @@ from multiprocessing import Process
 import time
 import requests
 from SiteJabberScraper import SiteJabberScraper
+from sys import platform
 
 api = Flask(__name__)
 
@@ -31,8 +32,11 @@ def grab_company():
         return json.dumps({"error" : "missing id argument"})
     if "webhookUrl" not in request.args:
         return json.dumps({"error" : "missing webhookUrl argument"})
-    p = Process(target=scrape_company, args=(request.args["id"], request.args["webhookUrl"],))
-    p.start()
+    if platform == "linux" or platform == "linux2":
+        p = Process(target=scrape_company, args=(request.args["id"], request.args["webhookUrl"],))
+        p.start()
+    else:
+        scrape_company(request.args["id"], request.args["webhookUrl"])
     return json.dumps(request.args)
 
 @api.route('/api/v1/regrab-review', methods=['GET'])
@@ -60,8 +64,11 @@ def grab_review():
         return json.dumps({"error" : "missing id argument"})
     if "webhookUrl" not in request.args:
         return json.dumps({"error" : "missing webhookUrl argument"})
-    p = Process(target=scrape_review, args=(request.args["id"], request.args["webhookUrl"],))
-    p.start()
+    if platform == "linux" or platform == "linux2":
+        p = Process(target=scrape_review, args=(request.args["id"], request.args["webhookUrl"],))
+        p.start()
+    else:
+        scrape_review(request.args["id"], request.args["webhookUrl"])
     return json.dumps(request.args)
 
 
