@@ -54,10 +54,14 @@ class DB:
             self.cur.execute("SELECT review_id from review where company_id = %s and review_date = %s and username = %s;", (review.company_id, review.date, review.username))
             fetched_results = self.cur.fetchall()
             if len(fetched_results) >= 1:
+                if USE_MARIA_DB:
+                    review_id = fetched_results[0][0]
+                else:
+                    review_id = fetched_results[0]["review_id"]
                 sql = """UPDATE review SET no_of_helpful_votes = %s, review_title = %s, review_text = %s, review_stars = %s, 
                 date_updated = %s , status = %s, log = %s where review_id = %s"""
                 args = (review.no_of_helpful_votes, review.review_title, review.review_text, review.review_stars, 
-                datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), review.status, review.log, fetched_results[0]["review_id"])
+                datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), review.status, review.log, review_id)
             else:    
                 sql = """INSERT INTO review (company_id, review_date, username, no_of_helpful_votes, review_title, review_text, review_stars, 
                 date_created, date_updated, status, log) VALUES (""" + "%s, " * 10 + "%s);"
