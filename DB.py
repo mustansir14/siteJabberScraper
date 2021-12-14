@@ -64,7 +64,7 @@ class DB:
                 datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), review.status, review.log, review_id)
             else:    
                 sql = """INSERT INTO review (company_id, review_date, username, no_of_helpful_votes, review_title, review_text, review_stars, review_page_no,
-                date_created, date_updated, status, log) VALUES (""" + "%s, " * 10 + "%s);"
+                date_created, date_updated, status, log) VALUES (""" + "%s, " * 11 + "%s);"
                 args = (review.company_id, review.date, review.username, review.no_of_helpful_votes, review.review_title, review.review_text, 
                 review.review_stars, review.review_page_no, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
                 review.status, review.log)
