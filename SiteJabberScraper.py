@@ -159,17 +159,25 @@ class SiteJabberScraper():
                         review.date = datetime.datetime.strptime(date, "%B %d %Y").strftime('%Y-%m-%d')
                     except:
                         review.date = None
-                        review.log += "Error while scraping/parsing date"
+                        review.log += "Error while scraping/parsing date\n"
                         review.status = "error"
                     if scrape_specific_review and str(review.date) != str(review_results[0]["review_date"]):
                         continue
                     review.no_of_helpful_votes = helpful_count
-                    review.review_title = review_content.find_element_by_class_name("review__title__text").text.strip()
+                    try:
+                        review.review_title = review_content.find_element_by_class_name("review__title__text").text.strip()
+                    except:
+                        review.status = "error"
+                        review.log += "error while scraping review title\n"
                     try:
                         review.review_text = review_content.find_element_by_class_name("review__text").find_element_by_tag_name("p").text.strip()
                     except:
                         review.review_text = ""
-                    review.review_stars = float(review_content.find_element_by_class_name("stars").get_attribute("title").split()[0])
+                    try:
+                        review.review_stars = float(review_content.find_element_by_class_name("stars").get_attribute("title").split()[0])
+                    except:
+                        review.status = "error"
+                        review.log += "error while scraping review stars\n"
                     reviews.append(review)
                     if scrape_specific_review:
                         got_review = True
