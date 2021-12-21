@@ -17,14 +17,13 @@ import sys
 import logging
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 
-def log(s):
-    logging.info(s)
+
 
 class SiteJabberScraper():
 
     def __init__(self, chromedriver_path=None) -> None:
         options = Options()
-        options.headless = True
+        # options.headless = True
         options.add_argument("window-size=1920,1080")
         options.add_argument("--log-level=3")
         options.add_argument("--no-sandbox")
@@ -52,7 +51,7 @@ class SiteJabberScraper():
 
     def scrape_company_details(self, company_id, save_to_db=True) -> Company:
 
-        log("Scraping Company Details for " + company_id)
+        logging.info("Scraping Company Details for " + company_id)
         company = Company()
         company.id = company_id
         company.url = "https://www.sitejabber.com/reviews/" + company_id
@@ -120,9 +119,9 @@ class SiteJabberScraper():
     def scrape_company_reviews(self, company_id, save_to_db=True, scrape_specific_review=None) -> List[Review]:
 
         if scrape_specific_review:
-            log("Scraping review with id %s for %s" % (scrape_specific_review, company_id))
+            logging.info("Scraping review with id %s for %s" % (scrape_specific_review, company_id))
         else:
-            log("Scraping reviews for " + company_id)
+            logging.info("Scraping reviews for " + company_id)
         review_url = "https://www.sitejabber.com/reviews/" + company_id
         self.driver.get(review_url)
         
@@ -134,7 +133,7 @@ class SiteJabberScraper():
         reviews = []
         page = 1
         while True:
-            log("Page " + str(page))
+            logging.info("Page " + str(page))
             if not self.dealt_with_popup:
                 try:
                     popup = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "ad-popup__dialog.ad-popup__widget")))
@@ -228,11 +227,16 @@ class SiteJabberScraper():
 
     def bulk_scrape(self, get_urls_from_file=False, continue_from_last_scrape=False, skip_if_exists=False):
  
+        empty_file = False
         if get_urls_from_file:
             with open("category_urls.json", "r") as f:
                 self.__total_categories_urls = json.load(f)
-        else:
-            log("Scraping Category URLs...")
+
+            if self.__total_categories_urls == {}:
+                empty_file = True
+
+        if not get_urls_from_file or empty_file:
+            logging.info("Scraping Category URLs...")
             self.driver.get("https://www.sitejabber.com/categories")
             time.sleep(2)
             self.__collect_category_urls()
@@ -248,7 +252,7 @@ class SiteJabberScraper():
                 last_category = last_scrape["category"]
                 category_flag = False
             else:
-                log("No backup file found. Scraping from beginning")
+                logging.info("No backup file found. Scraping from beginning")
                 category_flag = True
                 last_scrape = {}
         else:
@@ -292,7 +296,7 @@ class SiteJabberScraper():
                         name = " ".join(name.split()[:-1])
                     url = category.find_element_by_tag_name("a").get_attribute("href")
                     if name not in list(self.__total_categories_urls.keys()):
-                        log("Got Category:", name)
+                        logging.info("Got Category: " + name)
                         self.__total_categories_urls[name] = url
                     return
             except:
@@ -340,6 +344,7 @@ class SiteJabberScraper():
         return company_urls
 
 
+
     def __del__(self):
         try:
             self.driver.quit()
@@ -349,9 +354,6 @@ class SiteJabberScraper():
 
 
 if __name__ == '__main__':
-
-    
-    
 
     parser = argparse.ArgumentParser(description="SiteGrabberScraper CLI to grab company and reviews from URL")
     parser.add_argument("--bulk_scrape", nargs='?', type=bool, default=False, help="Boolean variable to bulk scrape companies. Default False. If set to True, save_to_db will also be set to True")
@@ -375,11 +377,11 @@ if __name__ == '__main__':
         for url in args.urls:
             id = url.strip("/").split("/")[-1]
             company = scraper.scrape_company_details(id, save_to_db=args.save_to_db)
-            log("Company Details for %s scraped successfully.\n" % company.id)
+            logging.info("Company Details for %s scraped successfully.\n" % company.id)
             print(company)
             print("\n")
             company.reviews = scraper.scrape_company_reviews(id, save_to_db=args.save_to_db)
-            log("Reviews for %s scraped successfully.\n" % company.id)
+            logging.info("Reviews for %s scraped successfully.\n" % company.id)
             for i, review in enumerate(company.reviews, start=1):
                 print("Review# " + str(i))
                 print(review)
