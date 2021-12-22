@@ -23,7 +23,7 @@ class SiteJabberScraper():
 
     def __init__(self, chromedriver_path=None) -> None:
         options = Options()
-        # options.headless = True
+        options.headless = True
         options.add_argument("window-size=1920,1080")
         options.add_argument("--log-level=3")
         options.add_argument("--no-sandbox")
