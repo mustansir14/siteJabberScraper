@@ -62,7 +62,8 @@ class SiteJabberScraper():
             with open(filename, "wb") as f:
                 f.write(res.content)
             company.logo = filename
-        except:
+        except Exception as e:
+            logging.error("Error in saving logo to disk. " + str(e))
             company.logo = ""
         edit_page_url = "https://www.sitejabber.com/edit-business/" + company.id
         self.driver.get(edit_page_url)
