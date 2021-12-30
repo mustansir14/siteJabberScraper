@@ -39,13 +39,13 @@ class SiteJabberScraper():
         self.db = DB()
 
 
-    def scrape_url(self, url, save_to_db=True) -> Company:
+    def scrape_url(self, url, save_to_db=True, continue_from_last_page=False) -> Company:
         
         if "https://www.sitejabber.com/reviews/" not in url and "https://www.sitejabber.com/edit-business/" not in url:
             raise Exception("Invalid URL")
         company_id = url.strip("/").split("/")[-1]
         company = self.scrape_company_details(company_id, save_to_db)
-        company.reviews = self.scrape_company_reviews(company_id, save_to_db)
+        company.reviews = self.scrape_company_reviews(company_id, save_to_db, continue_from_last_page=continue_from_last_page)
         return company
 
 
@@ -117,7 +117,7 @@ class SiteJabberScraper():
         return company
 
 
-    def scrape_company_reviews(self, company_id, save_to_db=True, scrape_specific_review=None) -> List[Review]:
+    def scrape_company_reviews(self, company_id, save_to_db=True, scrape_specific_review=None, continue_from_last_page=None) -> List[Review]:
 
         if scrape_specific_review:
             logging.info("Scraping review with id %s for %s" % (scrape_specific_review, company_id))
@@ -130,69 +130,84 @@ class SiteJabberScraper():
             self.db.cur.execute("SELECT username, review_date from review where review_id = %s", (scrape_specific_review))
             review_results = self.db.cur.fetchall()
             got_review = False
-    
+
+        last_page = None
+        if continue_from_last_page:
+            self.db.cur.execute("SELECT max(review_page_no) as page from review where company_id = %s;", (company_id))
+            try:
+                last_page = int(self.db.cur.fetchall()[0]["page"])
+                logging.info("Last scraped page: " + str(last_page))
+                logging.info("Moving to page " + str(last_page+1) + "...")
+            except:
+                pass
         reviews = []
         page = 1
         while True:
-            logging.info("Page " + str(page))
-            if not self.dealt_with_popup:
-                try:
-                    popup = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "ad-popup__dialog.ad-popup__widget")))
-                    popup.find_element_by_class_name("ad-popup__widget__title_close").click()
-                    self.dealt_with_popup = True
-                except:
-                    pass
-                try:
-                    self.driver.find_element_by_class_name("cookie-consent__close").click()
-                except:
-                    pass
-            review_tags = self.driver.find_elements_by_class_name("review")
-            for review_tag in review_tags:
-                username = review_tag.find_element_by_class_name("review__author__name").text.strip()
-                if scrape_specific_review and username != review_results[0]["username"]:
-                    continue
-                try:
-                    helpful_count = int(review_tag.find_element_by_class_name("helpful__count").text.strip("()"))
-                except:
-                    helpful_count = 0
-                review_contents = review_tag.find_elements_by_class_name("review__content")
-                for review_content in review_contents:
-                    review = Review()
-                    review.company_id = company_id
-                    review.username = username
+            if not last_page or (last_page and page > last_page):
+                page_reviews = []
+                logging.info("Page " + str(page))
+                if not self.dealt_with_popup:
                     try:
-                        date = review_content.find_element_by_class_name("review__date").text.strip().replace("st,", "").replace("nd,", "").replace("rd,", "").replace("th,", "")
-                        review.date = datetime.datetime.strptime(date, "%B %d %Y").strftime('%Y-%m-%d')
+                        popup = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "ad-popup__dialog.ad-popup__widget")))
+                        popup.find_element_by_class_name("ad-popup__widget__title_close").click()
+                        self.dealt_with_popup = True
                     except:
-                        review.date = None
-                        review.log += "Error while scraping/parsing date\n"
-                        review.status = "error"
-                    if scrape_specific_review and str(review.date) != str(review_results[0]["review_date"]):
+                        pass
+                    try:
+                        self.driver.find_element_by_class_name("cookie-consent__close").click()
+                    except:
+                        pass
+                review_tags = self.driver.find_elements_by_class_name("review")
+                for review_tag in review_tags:
+                    username = review_tag.find_element_by_class_name("review__author__name").text.strip()
+                    if scrape_specific_review and username != review_results[0]["username"]:
                         continue
-                    review.no_of_helpful_votes = helpful_count
                     try:
-                        review.review_title = review_content.find_element_by_class_name("review__title__text").text.strip()
+                        helpful_count = int(review_tag.find_element_by_class_name("helpful__count").text.strip("()"))
                     except:
-                        review.review_title = ""
-                        review.status = "error"
-                        review.log += "error while scraping review title\n"
-                    try:
-                        review.review_text = review_content.find_element_by_class_name("review__text").find_element_by_tag_name("p").text.strip()
-                    except:
-                        review.review_text = ""
-                    try:
-                        review.review_stars = float(review_content.find_element_by_class_name("stars").get_attribute("title").split()[0])
-                    except:
-                        review.status = "error"
-                        review.log += "error while scraping review stars\n"
-                    review.review_page_no = page
-                    reviews.append(review)
-                    if scrape_specific_review:
-                        got_review = True
-                        break
+                        helpful_count = 0
+                    review_contents = review_tag.find_elements_by_class_name("review__content")
+                    for review_content in review_contents:
+                        review = Review()
+                        review.company_id = company_id
+                        review.username = username
+                        try:
+                            date = review_content.find_element_by_class_name("review__date").text.strip().replace("st,", "").replace("nd,", "").replace("rd,", "").replace("th,", "")
+                            review.date = datetime.datetime.strptime(date, "%B %d %Y").strftime('%Y-%m-%d')
+                        except:
+                            review.date = None
+                            review.log += "Error while scraping/parsing date\n"
+                            review.status = "error"
+                        if scrape_specific_review and str(review.date) != str(review_results[0]["review_date"]):
+                            continue
+                        review.no_of_helpful_votes = helpful_count
+                        try:
+                            review.review_title = review_content.find_element_by_class_name("review__title__text").text.strip()
+                        except:
+                            review.review_title = ""
+                            review.status = "error"
+                            review.log += "error while scraping review title\n"
+                        try:
+                            review.review_text = review_content.find_element_by_class_name("review__text").find_element_by_tag_name("p").text.strip()
+                        except:
+                            review.review_text = ""
+                        try:
+                            review.review_stars = float(review_content.find_element_by_class_name("stars").get_attribute("title").split()[0])
+                        except:
+                            review.status = "error"
+                            review.log += "error while scraping review stars\n"
+                        review.review_page_no = page
+                        reviews.append(review)
+                        page_reviews.append(review)
+                        if scrape_specific_review:
+                            got_review = True
+                            break
 
-            if scrape_specific_review and got_review:
-                break
+                if save_to_db and page_reviews:
+                    self.db.insert_or_update_reviews(page_reviews, page=page)
+
+                if scrape_specific_review and got_review:
+                    break
             
             try:
                 next_page = self.driver.find_element_by_class_name("pagination__next").find_element_by_class_name("pagination__button--enabled")
@@ -220,8 +235,7 @@ class SiteJabberScraper():
             except:
                 break
 
-        if save_to_db and reviews:
-            self.db.insert_or_update_reviews(reviews)
+        
             
         return reviews
 
@@ -277,7 +291,7 @@ class SiteJabberScraper():
                             if len(self.db.cur.fetchall()) > 0:
                                 continue
 
-                        self.scrape_url(company_url)
+                        self.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
                         
                         last_scrape["url"] = company_url
                         last_scrape["category"] = category
