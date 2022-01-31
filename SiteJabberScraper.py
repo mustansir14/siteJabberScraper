@@ -133,7 +133,7 @@ class SiteJabberScraper():
 
         last_page = None
         if continue_from_last_page:
-            self.db.cur.execute("SELECT max(review_page_no) as page from review where company_id = %s;", (company_id))
+            self.db.cur.execute("SELECT max(review_page_no) as page from review where company_id = %s", (company_id))
             try:
                 last_page = int(self.db.cur.fetchall()[0]["page"])
                 logging.info("Last scraped page: " + str(last_page))
