@@ -78,7 +78,7 @@ class SiteJabberScraper():
                 company.category2 = categories[1].text.strip()
             if len(categories) > 2:
                 company.category3 = categories[2].text.strip()
-            company.email = self.driver.find_element_by_id("email").get_attribute("value")
+            company.email = self.driver.find_element_by_id("location-email").get_attribute("value")
             company.phone = ""
             wait_counter = 0
             while wait_counter < 5:
@@ -93,12 +93,12 @@ class SiteJabberScraper():
                 except:
                     time.sleep(1)
                     wait_counter += 1
-            company.street_address1 = self.driver.find_element_by_id("street-address").get_attribute("value")
-            company.street_address2 = self.driver.find_element_by_id("street-address-2").get_attribute("value")
-            company.city = self.driver.find_element_by_id("city").get_attribute("value")
-            company.state = self.driver.find_element_by_id("state").get_attribute("value")
-            company.zip_code = self.driver.find_element_by_id("postal-code").get_attribute("value")
-            company.country = self.driver.find_element_by_id("country").get_attribute("value")
+            company.street_address1 = self.driver.find_element_by_id("location-street-address").get_attribute("value")
+            company.street_address2 = self.driver.find_element_by_id("location-street-address-2").get_attribute("value")
+            company.city = self.driver.find_element_by_id("location-city").get_attribute("value")
+            company.state = self.driver.find_element_by_id("location-state").get_attribute("value")
+            company.zip_code = self.driver.find_element_by_id("location-postal-code").get_attribute("value")
+            company.country = self.driver.find_element_by_id("location-country").get_attribute("value")
             company.wikipedia_url = self.driver.find_element_by_id("wikipedia-url").get_attribute("value")
             company.facebook_url = self.driver.find_element_by_id("facebook-url").get_attribute("value")
             company.twitter_url = self.driver.find_element_by_id("twitter-url").get_attribute("value")
@@ -106,10 +106,10 @@ class SiteJabberScraper():
             company.youtube_url = self.driver.find_element_by_id("youtube-url").get_attribute("value")
             company.pinterest_url = self.driver.find_element_by_id("pinterest-url").get_attribute("value")
             company.instagram_url = self.driver.find_element_by_id("instagram-url").get_attribute("value")
-        except:
+        except Exception as e:
             company.name = company.id
             company.status = "error"
-            company.log = "edit-business page error"
+            company.log = "edit-business page error : " + str(e)
         if not company.status:
             company.status = "success"
         if save_to_db:
