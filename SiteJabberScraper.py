@@ -17,7 +17,6 @@ import argparse
 import json
 import sys
 import logging
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 
 
 
@@ -374,12 +373,17 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="SiteGrabberScraper CLI to grab company and reviews from URL")
     parser.add_argument("--bulk_scrape", nargs='?', type=bool, default=False, help="Boolean variable to bulk scrape companies. Default False. If set to True, save_to_db will also be set to True")
+    parser.add_argument("--log_file", nargs='?', type=str, default=None, help="Path for log file. If not given, output will be printed on stdout.")
     parser.add_argument("--urls", nargs='*', help="url(s) for scraping. Separate by spaces")
     parser.add_argument("--save_to_db", nargs='?', type=bool, default=False, help="Boolean variable to save to db. Default False")
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
     args = parser.parse_args()
+    if args.log_file:
+        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    else:
+        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
