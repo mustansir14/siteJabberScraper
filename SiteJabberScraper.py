@@ -4,6 +4,8 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.utils import ChromeType
 import time
 from typing import List
 from DB import DB
@@ -32,7 +34,7 @@ class SiteJabberScraper():
         if chromedriver_path:
             self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
         else:
-            self.driver = webdriver.Chrome(options=options)
+            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
         self.dealt_with_popup = False
         if not os.path.exists("file/logo/"):
             os.makedirs("file/logo")
