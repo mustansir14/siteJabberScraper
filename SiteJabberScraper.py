@@ -17,6 +17,7 @@ import argparse
 import json
 import sys
 import logging
+from multiprocessing import Process, Queue
 
 
 
@@ -241,7 +242,7 @@ class SiteJabberScraper():
         return reviews
 
 
-    def bulk_scrape(self, get_urls_from_file=False, continue_from_last_scrape=False, skip_if_exists=False):
+    def bulk_scrape(self, get_urls_from_file=False, continue_from_last_scrape=False, skip_if_exists=False, no_of_threads=1):
  
         empty_file = False
         if get_urls_from_file:
@@ -276,28 +277,56 @@ class SiteJabberScraper():
             last_scrape = {}
             
         url_flag = category_flag
+        
         for category, url in self.__total_categories_urls.items():
             if not category_flag and last_category == category:
                 category_flag = True
             if category_flag:
+                logging.info("Scraping Category URLS...")
                 company_urls = self.__scrape_company_urls_from_category(url)
+                urls_to_scrape = Queue()
                 for company_url in company_urls:
                     if not url_flag and company_url == last_company_url:
                         url_flag = True
                         continue
                     if url_flag:
-
                         if skip_if_exists:
                             self.db.cur.execute("SELECT * from company where url = %s;", (company_url))
                             if len(self.db.cur.fetchall()) > 0:
                                 continue
 
-                        self.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
+                        # self.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
+                        urls_to_scrape.put(company_url)
                         
-                        last_scrape["url"] = company_url
-                        last_scrape["category"] = category
-                        with open("last_scrape_info.json", "w") as f:
-                            json.dump(last_scrape, f)
+                        # last_scrape["url"] = company_url
+                        # last_scrape["category"] = category
+                        # with open("last_scrape_info.json", "w") as f:
+                        #     json.dump(last_scrape, f)
+                
+                processes = []
+                for i in range(no_of_threads):
+                    processes.append(Process(target=self.scrape_urls_from_queue, args=(urls_to_scrape, category, continue_from_last_scrape)))
+                    processes[i].start()
+
+                for i in range(no_of_threads):
+                    processes[i].join()
+    
+    def scrape_urls_from_queue(self, q, category, continue_from_last_scrape):
+
+        scraper = SiteJabberScraper()
+        
+        while q.qsize():
+            company_url = q.get()
+            scraper.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
+            last_scrape = {}
+            last_scrape["url"] = company_url
+            last_scrape["category"] = category
+            with open("last_scrape_info.json", "w") as f:
+                json.dump(last_scrape, f)
+        
+        del scraper
+            
+        
 
 
     def __collect_category_urls(self, category=None):
@@ -373,6 +402,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="SiteGrabberScraper CLI to grab company and reviews from URL")
     parser.add_argument("--bulk_scrape", nargs='?', type=bool, default=False, help="Boolean variable to bulk scrape companies. Default False. If set to True, save_to_db will also be set to True")
+    parser.add_argument("--no_of_threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
     parser.add_argument("--log_file", nargs='?', type=str, default=None, help="Path for log file. If not given, output will be printed on stdout.")
     parser.add_argument("--urls", nargs='*', help="url(s) for scraping. Separate by spaces")
     parser.add_argument("--save_to_db", nargs='?', type=bool, default=False, help="Boolean variable to save to db. Default False")
@@ -383,17 +413,17 @@ if __name__ == '__main__':
     if args.log_file:
         logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     else:
-        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+        logging.basicConfig(format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
-            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True)
+            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
         elif os.path.isfile("category_urls.json"):
-            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=False)
+            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
         elif os.path.isfile("last_scrape_info.json"):
-            scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=True)
+            scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
         else:
-            scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=False)
+            scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
     else:
         for url in args.urls:
             id = url.strip("/").split("/")[-1]
