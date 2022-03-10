@@ -18,6 +18,7 @@ import json
 import sys
 import logging
 from multiprocessing import Process, Queue
+from sys import platform
 
 
 
@@ -308,21 +309,24 @@ class SiteJabberScraper():
                             if len(self.db.cur.fetchall()) > 0:
                                 continue
 
-                        # self.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
                         urls_to_scrape.put(company_url)
-                        
-                        # last_scrape["url"] = company_url
-                        # last_scrape["category"] = category
-                        # with open("last_scrape_info.json", "w") as f:
-                        #     json.dump(last_scrape, f)
-                
-                processes = []
-                for i in range(no_of_threads):
-                    processes.append(Process(target=self.scrape_urls_from_queue, args=(urls_to_scrape, category, continue_from_last_scrape)))
-                    processes[i].start()
+                          
+                if platform == "linux" or platform == "linux2":
+                    processes = []
+                    for i in range(no_of_threads):
+                        processes.append(Process(target=self.scrape_urls_from_queue, args=(urls_to_scrape, category, continue_from_last_scrape)))
+                        processes[i].start()
 
-                for i in range(no_of_threads):
-                    processes[i].join()
+                    for i in range(no_of_threads):
+                        processes[i].join()
+                else:
+                    for company_url in urls_to_scrape:
+                        scraper.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
+                        last_scrape = {}
+                        last_scrape["url"] = company_url
+                        last_scrape["category"] = category
+                        with open("last_scrape_info.json", "w") as f:
+                            json.dump(last_scrape, f)
     
     def scrape_urls_from_queue(self, q, category, continue_from_last_scrape):
 
@@ -423,10 +427,17 @@ if __name__ == '__main__':
         parser.print_help(sys.stderr)
         sys.exit(1)
     args = parser.parse_args()
-    if args.log_file:
+
+    # setup logging based on arguments
+    if args.log_file and platform == "linux" or platform == "linux2":
+        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    elif platform == "linux" or platform == "linux2":
+        logging.basicConfig(format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    elif args.log_file:
         logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     else:
-        logging.basicConfig(format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
