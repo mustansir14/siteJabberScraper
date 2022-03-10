@@ -25,11 +25,24 @@ class SiteJabberScraper():
 
     def __init__(self, chromedriver_path=None) -> None:
         options = Options()
-        options.headless = True
+        options.headless = False if os.name == "nt" else True
         options.add_argument("window-size=1920,1080")
         options.add_argument("--log-level=3")
         options.add_argument("--no-sandbox")
         options.add_argument('--disable-dev-shm-usage')
+        
+        if os.name != "nt":
+            # https://peter.sh/experiments/chromium-command-line-switches/
+            
+            options.add_argument('--disable-extensions');
+            options.add_argument('--single-process'); # one process to take less memory
+            options.add_argument('--renderer-process-limit=1'); # do not allow take more resources
+            options.add_argument('--disable-crash-reporter'); # disable crash reporter process
+            options.add_argument('--no-zygote'); # disable zygote process
+        
+        # cpu optimization
+        options.add_argument('--enable-low-res-tiling');
+        
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36")
         if chromedriver_path:
             self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
