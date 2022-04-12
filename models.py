@@ -36,7 +36,7 @@ class Company:
             return_string  += "\nCategory 2: " + self.category2
         if self.category3:
             return_string  += "\nCategory 3: " + self.category3
-        return_string  += "\nEmail: " + self.email
+        return_string  += "\nEmail: " + str(self.email)
         return_string  += "\nPhone: " + self.phone
         return_string  += "\nStreet Address 1: " + self.street_address1
         return_string  += "\nStreet Address 2: " + self.street_address2
