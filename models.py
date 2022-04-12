@@ -30,7 +30,8 @@ class Company:
     def __str__(self) -> str:
         return_string  = "Name: " + self.name
         return_string  += "\nLogo: " + self.logo
-        return_string  += "\nCategory 1: " + self.category1
+        if self.category1:
+            return_string  += "\nCategory 1: " + self.category1
         if self.category2:
             return_string  += "\nCategory 2: " + self.category2
         if self.category3:
