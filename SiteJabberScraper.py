@@ -459,7 +459,7 @@ if __name__ == '__main__':
             scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
     elif args.urls_from_file:
         with open( args.urls_from_file ) as file:
-            while line := file.readline():
+            for line in file:
                 url = line.rstrip()
                 if url:
                     id = url.strip("/").split("/")[-1]
