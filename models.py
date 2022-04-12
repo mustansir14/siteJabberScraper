@@ -28,22 +28,22 @@ class Company:
         self.status = None
 
     def __str__(self) -> str:
-        return_string  = "Name: " + str(self.name).encode("utf-8")
-        return_string  += "\nLogo: " + str(self.logo).encode("utf-8")
+        return_string  = "Name: " + str(self.name)
+        return_string  += "\nLogo: " + str(self.logo)
         if self.category1:
-            return_string  += "\nCategory 1: " + str(self.category1).encode("utf-8")
+            return_string  += "\nCategory 1: " + str(self.category1)
         if self.category2:
-            return_string  += "\nCategory 2: " + str(self.category2).encode("utf-8")
+            return_string  += "\nCategory 2: " + str(self.category2)
         if self.category3:
-            return_string  += "\nCategory 3: " + str(self.category3).encode("utf-8")
-        return_string  += "\nEmail: " + str(self.email).encode("utf-8")
-        return_string  += "\nPhone: " + str(self.phone).encode("utf-8")
-        return_string  += "\nStreet Address 1: " + str(self.street_address1).encode("utf-8")
-        return_string  += "\nStreet Address 2: " + str(self.street_address2).encode("utf-8")
-        return_string  += "\nCity: " + str(self.city).encode("utf-8")
-        return_string  += "\nState: " + str(self.state).encode("utf-8")
-        return_string  += "\nCountry: " + str(self.country).encode("utf-8")
-        return_string  += "\nZip Code: " + str(self.zip_code).encode("utf-8")
+            return_string  += "\nCategory 3: " + str(self.category3)
+        return_string  += "\nEmail: " + str(self.email)
+        return_string  += "\nPhone: " + str(self.phone)
+        return_string  += "\nStreet Address 1: " + str(self.street_address1)
+        return_string  += "\nStreet Address 2: " + str(self.street_address2)
+        return_string  += "\nCity: " + str(self.city)
+        return_string  += "\nState: " + str(self.state)
+        return_string  += "\nCountry: " + str(self.country)
+        return_string  += "\nZip Code: " + str(self.zip_code)
         social_media_urls = [self.wikipedia_url, self.facebook_url, self.twitter_url, self.linkedin_url, self.youtube_url, self.pinterest_url, self.instagram_url]
         return_string  += "\nSocial Media URLs: " + " | ".join([url for url in social_media_urls if url])
         return return_string 
