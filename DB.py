@@ -30,19 +30,19 @@ class DB:
                     sql = """UPDATE company set company_name = %s, url = %s, logo = %s, category1 = %s, category2 = %s, category3 = %s, email = %s, 
                     phone = %s, street_address1 = %s, street_address2 = %s, city = %s, state = %s, zip_code = %s, country = %s, wikipedia_url = %s,
                     facebook_url = %s, twitter_url = %s, linkedin_url = %s, youtube_url = %s, pinterest_url = %s, instagram_url = %s, date_updated = %s,
-                    status = %s, log = %s where company_id = %s"""
+                    status = %s, log = %s, description = %s where company_id = %s"""
                     args = (company.name, company.url, company.logo, company.category1, 
                     company.category2, company.category3, company.email, company.phone, company.street_address1, company.street_address2, 
                     company.city, company.state, company.zip_code, company.country, company.wikipedia_url, company.facebook_url, company.twitter_url,
                     company.linkedin_url, company.youtube_url, company.pinterest_url, company.instagram_url, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    company.status, company.log, company.id)
+                    company.status, company.log, company.description, company.id)
                     success_statement = "Company " + company.id + " details updated successfully!"
                 else:
-                    sql = "INSERT INTO company VALUES (" + "%s, " * 25 + "%s);"
+                    sql = "INSERT INTO company VALUES (" + "%s, " * 26 + "%s);"
                     args = (company.id, company.name, company.url, company.logo, company.category1, 
                     company.category2, company.category3, company.email, company.phone, company.street_address1, company.street_address2, 
                     company.city, company.state, company.zip_code, company.country, company.wikipedia_url, company.facebook_url, company.twitter_url,
-                    company.linkedin_url, company.youtube_url, company.pinterest_url, company.instagram_url, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    company.linkedin_url, company.youtube_url, company.pinterest_url, company.instagram_url, company.description, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                     datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), company.status, company.log)
                     success_statement = "Company " + company.id + " details added to DB successfully!"
                 self.cur.execute(sql, args)

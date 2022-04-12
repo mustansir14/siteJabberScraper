@@ -26,6 +26,7 @@ class Company:
         self.reviews = []
         self.log = None
         self.status = None
+        self.description = None
         
     def str( self, text ) -> str:
         # need set before export PYTHONIOENCODING=utf-8
@@ -34,12 +35,14 @@ class Company:
     def __str__(self) -> str:
         return_string  = "Name: " + self.str(self.name)
         return_string  += "\nLogo: " + self.str(self.logo)
+        
         if self.category1:
             return_string  += "\nCategory 1: " + self.str(self.category1)
         if self.category2:
             return_string  += "\nCategory 2: " + self.str(self.category2)
         if self.category3:
             return_string  += "\nCategory 3: " + self.str(self.category3)
+            
         return_string  += "\nEmail: " + self.str(self.email)
         return_string  += "\nPhone: " + self.str(self.phone)
         return_string  += "\nStreet Address 1: " + self.str(self.street_address1)
@@ -48,8 +51,12 @@ class Company:
         return_string  += "\nState: " + self.str(self.state)
         return_string  += "\nCountry: " + self.str(self.country)
         return_string  += "\nZip Code: " + self.str(self.zip_code)
+        
         social_media_urls = [self.wikipedia_url, self.facebook_url, self.twitter_url, self.linkedin_url, self.youtube_url, self.pinterest_url, self.instagram_url]
+        
         return_string  += "\nSocial Media URLs: " + " | ".join([url for url in social_media_urls if url])
+        return_string  += "\nDescription: " + self.str(self.description)
+        
         return return_string 
 
 class Review:

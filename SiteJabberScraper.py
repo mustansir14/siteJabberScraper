@@ -68,10 +68,18 @@ class SiteJabberScraper():
     def scrape_company_details(self, company_id, save_to_db=True) -> Company:
 
         logging.info("Scraping Company Details for " + company_id)
+        
         company = Company()
         company.id = company_id
         company.url = "https://www.sitejabber.com/reviews/" + company_id
+        
         self.driver.get(company.url)
+        
+        try:
+            company.description = self.driver.find_element_by_class_name("url-business__description").get_attribute('innerText')
+        except Exception as e:
+            company.description = ""
+        
         try:
             res = requests.get(self.driver.find_element_by_class_name("website-thumbnail__image.object-fit").get_attribute("src"))
             filename = "file/logo/" + company_id.replace("/", "_").replace(".", "_").replace("\\", "_") + ".jpg"
