@@ -28,6 +28,7 @@ class Company:
         self.status = None
         
     def str( self, text ) -> str:
+        # need set before export PYTHONIOENCODING=utf-8
         return str( text ).encode( "utf-8", "ignore" ).decode( "utf-8" )
 
     def __str__(self) -> str:
@@ -66,6 +67,7 @@ class Review:
         self.status = None
         
     def str( self, text ) -> str:
+        # need set before export PYTHONIOENCODING=utf-8
         return str( text ).encode( "utf-8", "ignore" ).decode( "utf-8" )
 
     def __str__(self) -> str:
