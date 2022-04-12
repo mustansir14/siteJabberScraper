@@ -430,6 +430,7 @@ if __name__ == '__main__':
     parser.add_argument("--no_of_threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
     parser.add_argument("--log_file", nargs='?', type=str, default=None, help="Path for log file. If not given, output will be printed on stdout.")
     parser.add_argument("--urls", nargs='*', help="url(s) for scraping. Separate by spaces")
+    parser.add_argument("--urls_from_file", nargs='?', type=str, help="Parse urls from file")
     parser.add_argument("--save_to_db", nargs='?', type=bool, default=False, help="Boolean variable to save to db. Default False")
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -456,6 +457,16 @@ if __name__ == '__main__':
             scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
         else:
             scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
+    elif args.urls_from_file:
+        with open( args.urls_from_file ) as file:
+            while line := file.readline():
+                url = line.rstrip()
+                if url:
+                    id = url.strip("/").split("/")[-1]
+                    company = scraper.scrape_company_details(id, save_to_db=args.save_to_db)
+                    logging.info("Company Details for %s scraped successfully.\n" % company.id)
+                    print(company)
+                    
     else:
         for url in args.urls:
             id = url.strip("/").split("/")[-1]
