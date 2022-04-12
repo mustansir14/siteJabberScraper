@@ -63,12 +63,12 @@ class Review:
         self.status = None
 
     def __str__(self) -> str:
-        return_string  = "Company: " + self.company_id
-        return_string  += "\nDate Posted: " + self.date
-        return_string  += "\nUser: " + self.username
-        return_string  += "\nNo of Helpful Votes: " + str(self.no_of_helpful_votes)
-        return_string  += "\nReview Stars: " + str(self.review_stars)
-        return_string  += "\nReview Title: " + self.review_title
-        return_string  += "\nReview Text: " + self.review_text
-        return_string  += "\nReview Page No: " + str(self.review_page_no)
+        return_string  = "Company: " + str(self.company_id).encode("utf-8")
+        return_string  += "\nDate Posted: " + str(self.date).encode("utf-8")
+        return_string  += "\nUser: " + str(self.username).encode("utf-8")
+        return_string  += "\nNo of Helpful Votes: " + str(self.no_of_helpful_votes).encode("utf-8")
+        return_string  += "\nReview Stars: " + str(self.review_stars).encode("utf-8")
+        return_string  += "\nReview Title: " + str(self.review_title).encode("utf-8")
+        return_string  += "\nReview Text: " + str(self.review_text).encode("utf-8")
+        return_string  += "\nReview Page No: " + str(self.review_page_no).encode("utf-8")
         return return_string
