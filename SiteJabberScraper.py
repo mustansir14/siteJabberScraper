@@ -460,19 +460,38 @@ class SiteJabberScraper():
         except:
             pass
 
+def scrapeCompanyThread( queue, options ):
+    scraper = SiteJabberScraper()
+
+    while queue.qsize():
+        companyUrl = queue.get()
+        scrapeCompanyDataByID( scraper, companyUrl, options )
+    
+    del scraper
+
 def scrapeCompaniesInThreads( urls, options ):
-    if options["threads"] > 1:
-        pass
+    if options["threads"] > 1 and ( platform == "linux" or platform == "linux2" ):
+        queue = Queue()
+        map( queue.put, urls )
+
+        processes = []
+        for i in range( options["threads"] ):
+            processes.append( Process( target = scrapeCompanyThread, args = ( queue, options ) ) )
+            processes[i].start()
+
+        for i in range( options["threads"] ):
+            processes[i].join()
     else:
+        scraper = SiteJabberScraper()
         for url in urls:
-            scrapeCompanyDataByID( url, options )
+            scrapeCompanyDataByID( scraper, url, options )
 
 
-def scrapeCompanyDataByID( url, options ):
+def scrapeCompanyDataByID( scraper, url, options ):
     url = url.strip()
     if url:
         companyID = url.strip("/").split("/")[-1]
-        company = scraper.scrape_company_details( companyID, save_to_db=options["saveToDatabase"] )
+        company = scraper.scrape_company_details( companyID, save_to_db = options["saveToDatabase"] )
         logging.info("Company Details for %s scraped successfully.\n" % company.id )
 
         print(company)
@@ -480,7 +499,7 @@ def scrapeCompanyDataByID( url, options ):
         
         if options["skipReviews"] is False:
             print("Get reviews...")
-            company.reviews = scraper.scrape_company_reviews( companyID, save_to_db=options["saveToDatabase"] )
+            company.reviews = scraper.scrape_company_reviews( companyID, save_to_db = options["saveToDatabase"] )
             logging.info("Reviews for %s scraped successfully.\n" % company.id )
             for i, review in enumerate(company.reviews, start=1):
                 print("Review# " + str(i))
@@ -514,7 +533,6 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     
-    scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
             scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
