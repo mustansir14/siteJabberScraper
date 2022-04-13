@@ -59,9 +59,13 @@ class SiteJabberScraper():
         
         if "https://www.sitejabber.com/reviews/" not in url and "https://www.sitejabber.com/edit-business/" not in url:
             raise Exception("Invalid URL")
+            
         company_id = url.strip("/").split("/")[-1]
         company = self.scrape_company_details(company_id, save_to_db)
-        company.reviews = self.scrape_company_reviews(company_id, save_to_db, continue_from_last_page=continue_from_last_page)
+
+        if company.status == "success":
+            company.reviews = self.scrape_company_reviews(company_id, save_to_db, continue_from_last_page=continue_from_last_page)
+
         return company
 
 
@@ -171,6 +175,7 @@ class SiteJabberScraper():
             company.name = company.id
             company.status = "error"
             company.log = "edit-business page error : " + str(e)
+
         if not company.status:
             company.status = "success"
             
@@ -500,6 +505,10 @@ def scrapeCompanyDataByID( scraper, url, options ):
     if url:
         companyID = url.strip("/").split("/")[-1]
         company = scraper.scrape_company_details( companyID, save_to_db = options["saveToDatabase"] )
+        if company.status == "error":
+            logging.error( "Error invalid company" )
+            return False
+
         logging.info("Company Details for %s scraped successfully.\n" % company.id )
 
         print(company)
