@@ -26,7 +26,7 @@ class DB:
         try:
             self.cur.execute( "DELETE FROM company WHERE company_id = %s;", company.id )
         except Exception as e:
-            logging.error(e)
+            logging.error( "delete_company error: " + str(e) )
 
     def insert_or_update_company(self, company : Company):
         while True:
