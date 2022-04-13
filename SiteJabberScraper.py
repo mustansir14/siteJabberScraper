@@ -487,6 +487,8 @@ def scrapeCompaniesInThreads( urls, options ):
 
         for i in range( options["threads"] ):
             processes[i].join()
+
+        print( "Job done" )
     else:
         scraper = SiteJabberScraper()
         for url in urls:
