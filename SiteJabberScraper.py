@@ -94,16 +94,16 @@ class SiteJabberScraper():
                 content = content.replace( "\n", "" ).replace( "\r", "" )
                 content = json.loads( content )
                 
-                if content["@type"] is not None and content["@type"] == "Organization" and content["address"]:
+                if "@type" in content and content["@type"] == "Organization" and "address" in content:
                     addressData = content["address"]
 
-                    if addressData["addressLocality"] is not None:
+                    if "addressLocality" in addressData:
                         company.city = addressData["addressLocality"]
 
-                    if addressData["addressRegion"] is not None:
+                    if "addressRegion" in addressData:
                         company.state = addressData["addressRegion"]
 
-                    if addressData["@type"] is not None and addressData["@type"] == "PostalAddress" and addressData["addressCountry"]:
+                    if "addressCountry" in addressData:
                         company.country = addressData["addressCountry"]["name"]
             
         except Exception as e:
@@ -157,12 +157,12 @@ class SiteJabberScraper():
             company.street_address2 = self.driver.find_element_by_id("location-street-address-2").get_attribute("value")
 
             city = self.driver.find_element_by_id("location-city").get_attribute("value")
-            if city and not company.city:
+            if city:
                 company.city = city
 
             state = self.driver.find_element_by_id("location-state").get_attribute("value")
             state = company.state.replace( "non-us", "" ) if company.state is not None else ""
-            if state and not company.state:
+            if state:
                 company.state = state
 
             company.zip_code = self.driver.find_element_by_id("location-postal-code").get_attribute("value")
