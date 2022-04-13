@@ -474,6 +474,8 @@ def scrapeCompaniesInThreads( urls, options ):
         queue = Queue()
         map( queue.put, urls )
 
+        print("Scrape with threads: %d, urls: %d" % ( options.threads, queue.len() ) )
+
         processes = []
         for i in range( options["threads"] ):
             processes.append( Process( target = scrapeCompanyThread, args = ( queue, options ) ) )
