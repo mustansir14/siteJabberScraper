@@ -91,11 +91,17 @@ class SiteJabberScraper():
             scripts = self.driver.find_elements_by_css_selector("script[type='application/ld+json']")
             for script in scripts:
                 content = script.get_attribute("innerText").strip()
-                print(content)
                 content = json.loads( content )
                 
                 if content["@type"] is not None and content["@type"] == "Organization" and content["address"]:
                     addressData = content["address"]
+
+                    if addressData["addressLocality"] is not None:
+                        company.city = addressData["addressLocality"]
+
+                    if addressData["addressRegion"] is not None:
+                        company.state = addressData["addressRegion"]
+
                     if addressData["@type"] is not None and addressData["@type"] == "PostalAddress" and addressData["addressCountry"]:
                         company.country = addressData["addressCountry"]["name"]
             
@@ -144,15 +150,22 @@ class SiteJabberScraper():
                     wait_counter += 1
             company.street_address1 = self.driver.find_element_by_id("location-street-address").get_attribute("value")
             company.street_address2 = self.driver.find_element_by_id("location-street-address-2").get_attribute("value")
-            company.city = self.driver.find_element_by_id("location-city").get_attribute("value")
-            company.state = self.driver.find_element_by_id("location-state").get_attribute("value")
-            company.state = company.state.replace( "non-us", "" )
+
+            city = self.driver.find_element_by_id("location-city").get_attribute("value")
+            if city and not company.city:
+                company.city = city
+
+            state = self.driver.find_element_by_id("location-state").get_attribute("value")
+            state = company.state.replace( "non-us", "" )
+            if state and not company.state:
+                company.state = state
+
             company.zip_code = self.driver.find_element_by_id("location-postal-code").get_attribute("value")
+
             country = self.driver.find_element_by_id("location-country").get_attribute("value")
-            print(country)
-            print(company.country)
             if country:
                 company.country = country
+
             company.wikipedia_url = self.driver.find_element_by_id("wikipedia-url").get_attribute("value")
             company.facebook_url = self.driver.find_element_by_id("facebook-url").get_attribute("value")
             company.twitter_url = self.driver.find_element_by_id("twitter-url").get_attribute("value")
