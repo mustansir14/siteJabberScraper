@@ -460,28 +460,29 @@ class SiteJabberScraper():
         except:
             pass
 
-def scrapeCompanyThread( queue, options ):
+def scrapeCompanyThread( urlsQueue, options ):
     scraper = SiteJabberScraper()
 
-    while queue.qsize():
-        companyUrl = queue.get()
+    while urlsQueue.qsize():
+        companyUrl = urlsQueue.get()
         scrapeCompanyDataByID( scraper, companyUrl, options )
     
     del scraper
 
 def scrapeCompaniesInThreads( urls, options ):
-    print("Scrape in threads, urls: %d...", len(urls))
+    print("Scrape in threads, urls: %d..." % ( len(urls) ) )
 
     if options["threads"] > 1 and ( platform == "linux" or platform == "linux2" ):
-        queue = Queue()
+        urlsQueue = Queue()
 
-        map( queue.put, urls )
+        for url in urls:
+            urlsQueue.put( url )
 
-        print("Scrape with threads: %d, urls: %d" % ( options["threads"], queue.qsize() ) )
+        print("Scrape with threads: %d, urls: %d" % ( options["threads"], urlsQueue.qsize() ) )
 
         processes = []
         for i in range( options["threads"] ):
-            processes.append( Process( target = scrapeCompanyThread, args = ( queue, options ) ) )
+            processes.append( Process( target = scrapeCompanyThread, args = ( urlsQueue, options ) ) )
             processes[i].start()
 
         for i in range( options["threads"] ):
