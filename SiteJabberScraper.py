@@ -91,6 +91,7 @@ class SiteJabberScraper():
             scripts = self.driver.find_elements_by_css_selector("script[type='application/ld+json']")
             for script in scripts:
                 content = script.get_attribute("innerText").strip()
+                content = content.replace( "\n", "" ).replace( "\r", "" )
                 content = json.loads( content )
                 
                 if content["@type"] is not None and content["@type"] == "Organization" and content["address"]:
@@ -127,14 +128,17 @@ class SiteJabberScraper():
             company.name = self.driver.find_element_by_id("name").get_attribute("value")
             categories = self.driver.find_elements_by_class_name("suggest-categories__breadcrumb")
             company.category1 = company.category2 = company.category3 = ""
+
             if len(categories) > 0:
                 company.category1 = categories[0].text.strip()
             if len(categories) > 1:
                 company.category2 = categories[1].text.strip()
             if len(categories) > 2:
                 company.category3 = categories[2].text.strip()
+
             company.email = self.driver.find_element_by_id("location-email").get_attribute("value")
             company.phone = ""
+
             wait_counter = 0
             while wait_counter < 5:
                 try:
@@ -148,6 +152,7 @@ class SiteJabberScraper():
                 except:
                     time.sleep(1)
                     wait_counter += 1
+
             company.street_address1 = self.driver.find_element_by_id("location-street-address").get_attribute("value")
             company.street_address2 = self.driver.find_element_by_id("location-street-address-2").get_attribute("value")
 
@@ -156,7 +161,7 @@ class SiteJabberScraper():
                 company.city = city
 
             state = self.driver.find_element_by_id("location-state").get_attribute("value")
-            state = company.state.replace( "non-us", "" )
+            state = company.state.replace( "non-us", "" ) if company.state is not None else ""
             if state and not company.state:
                 company.state = state
 
@@ -185,6 +190,8 @@ class SiteJabberScraper():
                 
                 
         except Exception as e:
+            logging.error( "Error looking fields values: " + str(e) )
+
             company.name = company.id
             company.status = "error"
             company.log = "edit-business page error : " + str(e)
