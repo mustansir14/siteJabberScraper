@@ -171,6 +171,10 @@ class SiteJabberScraper():
             if country:
                 company.country = country
 
+            usStates = ["alaska", "alabama", "arkansas", "american samoa", "arizona", "california", "colorado", "connecticut", "district of columbia", "delaware", "florida", "georgia", "guam", "hawaii", "iowa", "idaho", "illinois", "indiana", "kansas", "kentucky", "louisiana", "massachusetts", "maryland", "maine", "michigan", "minnesota", "missouri", "mississippi", "montana", "north carolina", "north dakota", "nebraska", "new hampshire", "new jersey", "new mexico", "nevada", "new york", "ohio", "oklahoma", "oregon", "pennsylvania", "puerto rico", "rhode island", "south carolina", "south dakota", "tennessee", "texas", "utah", "virginia", "virgin islands", "vermont", "washington", "wisconsin", "west virginia", "wyoming"]
+            if not country and company.state and company.state.lower() in usStates:
+                company.country = "United States"
+
             company.wikipedia_url = self.driver.find_element_by_id("wikipedia-url").get_attribute("value")
             company.facebook_url = self.driver.find_element_by_id("facebook-url").get_attribute("value")
             company.twitter_url = self.driver.find_element_by_id("twitter-url").get_attribute("value")
