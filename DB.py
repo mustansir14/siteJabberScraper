@@ -22,6 +22,12 @@ class DB:
             self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
         self.cur = self.con.cursor()
 
+    def delete_company( self, company: Company ):
+        try:
+            self.cur.execute( "DELETE FROM company WHERE company_id = %s;", company.id )
+        except Exception as e:
+            logging.error(e)
+
     def insert_or_update_company(self, company : Company):
         while True:
             try:

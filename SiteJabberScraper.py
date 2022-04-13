@@ -59,7 +59,7 @@ class SiteJabberScraper():
         
         if "https://www.sitejabber.com/reviews/" not in url and "https://www.sitejabber.com/edit-business/" not in url:
             raise Exception("Invalid URL")
-            
+
         company_id = url.strip("/").split("/")[-1]
         company = self.scrape_company_details(company_id, save_to_db)
 
@@ -180,7 +180,10 @@ class SiteJabberScraper():
             company.status = "success"
             
         if save_to_db:
-            self.db.insert_or_update_company(company)
+            if company.status = "success":
+                self.db.insert_or_update_company( company )
+            else:
+                self.db.delete_company( company )
             
         return company
 
