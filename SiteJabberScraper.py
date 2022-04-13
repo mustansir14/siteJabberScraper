@@ -180,7 +180,7 @@ class SiteJabberScraper():
             company.status = "success"
             
         if save_to_db:
-            if company.status = "success":
+            if company.status == "success":
                 self.db.insert_or_update_company( company )
             else:
                 self.db.delete_company( company )
