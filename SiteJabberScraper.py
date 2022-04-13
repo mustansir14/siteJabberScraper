@@ -470,6 +470,8 @@ def scrapeCompanyThread( queue, options ):
     del scraper
 
 def scrapeCompaniesInThreads( urls, options ):
+    print("Scrape in threads...")
+    
     if options["threads"] > 1 and ( platform == "linux" or platform == "linux2" ):
         queue = Queue()
         map( queue.put, urls )
