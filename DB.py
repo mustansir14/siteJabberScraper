@@ -24,7 +24,7 @@ class DB:
 
     def delete_company( self, company: Company ):
         try:
-            self.cur.execute( "DELETE FROM company WHERE company_id = %s;", company.id )
+            self.cur.execute( "DELETE FROM company WHERE company_id = %s;", ( company.id ) )
         except Exception as e:
             logging.error( "delete_company error: " + str(e) )
 
