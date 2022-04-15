@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 import json, argparse, sys, re, time, logging
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
@@ -21,7 +22,7 @@ class WikipediaScraper():
         if chromedriver_path:
             self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
         else:
-            self.driver = webdriver.Chrome(options=options)
+            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
         self.driver.get("https://www.wikipedia.org/")
 
     def scrape_company(self, company_name, keywords=[]):
