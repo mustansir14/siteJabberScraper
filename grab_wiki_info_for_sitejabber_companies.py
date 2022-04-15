@@ -25,14 +25,23 @@ scraper = WikipediaScraper()
 
 for company in companies:
 
-    if args.skip_already_done and company["wiki_info"] is not None:
+    if USE_MARIA_DB:
+        company_id = company[0]
+        company_name = company[1]
+        company_wiki_info = company[2]
+    else:
+        company_id = company["company_id"]
+        company_name = company["company_name"]
+        company_wiki_info = company["wiki_info"]
+
+    if args.skip_already_done and company_wiki_info is not None:
         continue
     try:
-        company_json = scraper.scrape_company(company["company_name"])
-        cur.execute("update company set wiki_info = %s where company_id = %s;", (str(company_json), company["company_id"]))
+        company_json = scraper.scrape_company(company_name)
+        cur.execute("update company set wiki_info = %s where company_id = %s;", (str(company_json), company_id))
         con.commit()
-        logging.info("Wiki Info scraped and saved to DB for " + company['company_name'])
+        logging.info("Wiki Info scraped and saved to DB for " + company_name)
     except Exception:
-        cur.execute("update company set wiki_info = '' where company_id = %s;", (company["company_id"]))
+        cur.execute("update company set wiki_info = '' where company_id = %s;", (company_id))
         con.commit()
-        logging.info("Couldn't find company %s on Wikipedia" % company["company_name"])
+        logging.info("Couldn't find company %s on Wikipedia" % company_name)
