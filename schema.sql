@@ -23,12 +23,13 @@ CREATE TABLE IF NOT EXISTS `company` (
   `youtube_url` varchar(500) DEFAULT NULL,
   `pinterest_url` varchar(500) DEFAULT NULL,
   `instagram_url` varchar(500) DEFAULT NULL,
+  `description` text default null,
   `date_created` datetime DEFAULT NULL,
   `date_updated` datetime DEFAULT NULL,
   `status` varchar(7) DEFAULT NULL,
   `log` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`company_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 
 
 CREATE TABLE IF NOT EXISTS `review` (
@@ -48,4 +49,4 @@ CREATE TABLE IF NOT EXISTS `review` (
   PRIMARY KEY (`review_id`),
   KEY `company_id` (`company_id`),
   CONSTRAINT `review_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`company_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=78366 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+) ENGINE=InnoDB AUTO_INCREMENT=78366 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

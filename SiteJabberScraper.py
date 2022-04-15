@@ -26,7 +26,7 @@ class SiteJabberScraper():
 
     def __init__(self, chromedriver_path=None) -> None:
         options = Options()
-        options.headless = False if os.name == "nt" else True
+        options.headless = True
         options.add_argument("window-size=1920,1080")
         options.add_argument("--log-level=3")
         options.add_argument("--no-sandbox")
@@ -59,19 +59,56 @@ class SiteJabberScraper():
         
         if "https://www.sitejabber.com/reviews/" not in url and "https://www.sitejabber.com/edit-business/" not in url:
             raise Exception("Invalid URL")
+
         company_id = url.strip("/").split("/")[-1]
         company = self.scrape_company_details(company_id, save_to_db)
-        company.reviews = self.scrape_company_reviews(company_id, save_to_db, continue_from_last_page=continue_from_last_page)
+
+        if company.status == "success":
+            company.reviews = self.scrape_company_reviews(company_id, save_to_db, continue_from_last_page=continue_from_last_page)
+
         return company
 
 
     def scrape_company_details(self, company_id, save_to_db=True) -> Company:
 
         logging.info("Scraping Company Details for " + company_id)
+        
         company = Company()
+        
         company.id = company_id
         company.url = "https://www.sitejabber.com/reviews/" + company_id
+        
         self.driver.get(company.url)
+        
+        # get description
+        try:
+            company.description = self.driver.find_element_by_class_name("url-business__description").get_attribute('innerText')
+        except Exception as e:
+            company.description = ""
+            
+        # fill empty fields via ld+json
+        try:
+            scripts = self.driver.find_elements_by_css_selector("script[type='application/ld+json']")
+            for script in scripts:
+                content = script.get_attribute("innerText").strip()
+                content = content.replace( "\n", "" ).replace( "\r", "" )
+                content = json.loads( content )
+                
+                if "@type" in content and content["@type"] == "Organization" and "address" in content:
+                    addressData = content["address"]
+
+                    if "addressLocality" in addressData:
+                        company.city = addressData["addressLocality"]
+
+                    if "addressRegion" in addressData:
+                        company.state = addressData["addressRegion"]
+
+                    if "addressCountry" in addressData:
+                        company.country = addressData["addressCountry"]["name"]
+            
+        except Exception as e:
+            logging.error( "Error parsing ld+json: " + str(e) )
+        
         try:
             res = requests.get(self.driver.find_element_by_class_name("website-thumbnail__image.object-fit").get_attribute("src"))
             filename = "file/logo/" + company_id.replace("/", "_").replace(".", "_").replace("\\", "_") + ".jpg"
@@ -81,21 +118,27 @@ class SiteJabberScraper():
         except Exception as e:
             logging.error("Error in saving logo to disk. " + str(e))
             company.logo = ""
+            
         edit_page_url = "https://www.sitejabber.com/edit-business/" + company.id
         self.driver.get(edit_page_url)
+        
         time.sleep(1)
+        
         try:
             company.name = self.driver.find_element_by_id("name").get_attribute("value")
             categories = self.driver.find_elements_by_class_name("suggest-categories__breadcrumb")
             company.category1 = company.category2 = company.category3 = ""
+
             if len(categories) > 0:
                 company.category1 = categories[0].text.strip()
             if len(categories) > 1:
                 company.category2 = categories[1].text.strip()
             if len(categories) > 2:
                 company.category3 = categories[2].text.strip()
+
             company.email = self.driver.find_element_by_id("location-email").get_attribute("value")
             company.phone = ""
+
             wait_counter = 0
             while wait_counter < 5:
                 try:
@@ -109,12 +152,29 @@ class SiteJabberScraper():
                 except:
                     time.sleep(1)
                     wait_counter += 1
+
             company.street_address1 = self.driver.find_element_by_id("location-street-address").get_attribute("value")
             company.street_address2 = self.driver.find_element_by_id("location-street-address-2").get_attribute("value")
-            company.city = self.driver.find_element_by_id("location-city").get_attribute("value")
-            company.state = self.driver.find_element_by_id("location-state").get_attribute("value")
+
+            city = self.driver.find_element_by_id("location-city").get_attribute("value")
+            if city:
+                company.city = city
+
+            state = self.driver.find_element_by_id("location-state").get_attribute("value")
+            state = company.state.replace( "non-us", "" ) if company.state is not None else ""
+            if state:
+                company.state = state
+
             company.zip_code = self.driver.find_element_by_id("location-postal-code").get_attribute("value")
-            company.country = self.driver.find_element_by_id("location-country").get_attribute("value")
+
+            country = self.driver.find_element_by_id("location-country").get_attribute("value")
+            if country:
+                company.country = country
+
+            usStates = ["alaska", "alabama", "arkansas", "american samoa", "arizona", "california", "colorado", "connecticut", "district of columbia", "delaware", "florida", "georgia", "guam", "hawaii", "iowa", "idaho", "illinois", "indiana", "kansas", "kentucky", "louisiana", "massachusetts", "maryland", "maine", "michigan", "minnesota", "missouri", "mississippi", "montana", "north carolina", "north dakota", "nebraska", "new hampshire", "new jersey", "new mexico", "nevada", "new york", "ohio", "oklahoma", "oregon", "pennsylvania", "puerto rico", "rhode island", "south carolina", "south dakota", "tennessee", "texas", "utah", "virginia", "virgin islands", "vermont", "washington", "wisconsin", "west virginia", "wyoming"]
+            if not country and company.state and company.state.lower() in usStates:
+                company.country = "United States"
+
             company.wikipedia_url = self.driver.find_element_by_id("wikipedia-url").get_attribute("value")
             company.facebook_url = self.driver.find_element_by_id("facebook-url").get_attribute("value")
             company.twitter_url = self.driver.find_element_by_id("twitter-url").get_attribute("value")
@@ -122,14 +182,33 @@ class SiteJabberScraper():
             company.youtube_url = self.driver.find_element_by_id("youtube-url").get_attribute("value")
             company.pinterest_url = self.driver.find_element_by_id("pinterest-url").get_attribute("value")
             company.instagram_url = self.driver.find_element_by_id("instagram-url").get_attribute("value")
+            
+            if company.zip_code and company.country and ( not company.state or not company.city ):
+                zipDataUrl = "http://www.vcharges.com/get-zip.php?country=" + requests.utils.quote( company.country ) + "&zip=" + requests.utils.quote( company.zip_code ) + "&type=all&output=json"
+                
+                print(zipDataUrl)
+                
+                response = requests.get( zipDataUrl, timeout = 5 )
+                if response.status_code == 200:
+                    print(response.json())
+                
+                
         except Exception as e:
+            logging.error( "Error looking fields values: " + str(e) )
+
             company.name = company.id
             company.status = "error"
             company.log = "edit-business page error : " + str(e)
+
         if not company.status:
             company.status = "success"
+            
         if save_to_db:
-            self.db.insert_or_update_company(company)
+            if company.status == "success":
+                self.db.insert_or_update_company( company )
+            else:
+                self.db.delete_company( company )
+            
         return company
 
 
@@ -413,7 +492,65 @@ class SiteJabberScraper():
         except:
             pass
 
+def scrapeCompanyThread( urlsQueue, options ):
+    scraper = SiteJabberScraper()
 
+    while urlsQueue.qsize():
+        companyUrl = urlsQueue.get()
+        scrapeCompanyDataByID( scraper, companyUrl, options )
+    
+    del scraper
+
+def scrapeCompaniesInThreads( urls, options ):
+    print("Scrape in threads, urls: %d..." % ( len(urls) ) )
+
+    if options["threads"] > 1 and ( platform == "linux" or platform == "linux2" ):
+        urlsQueue = Queue()
+
+        for url in urls:
+            urlsQueue.put( url )
+
+        print("Scrape with threads: %d, urls: %d" % ( options["threads"], urlsQueue.qsize() ) )
+
+        processes = []
+        for i in range( options["threads"] ):
+            processes.append( Process( target = scrapeCompanyThread, args = ( urlsQueue, options ) ) )
+            processes[i].start()
+
+        for i in range( options["threads"] ):
+            processes[i].join()
+
+        print( "Job done" )
+    else:
+        scraper = SiteJabberScraper()
+        for url in urls:
+            scrapeCompanyDataByID( scraper, url, options )
+
+
+def scrapeCompanyDataByID( scraper, url, options ):
+    url = url.strip()
+    if url:
+        companyID = url.strip("/").split("/")[-1]
+        company = scraper.scrape_company_details( companyID, save_to_db = options["saveToDatabase"] )
+        if company.status == "error":
+            logging.error( "Error invalid company" )
+            return False
+
+        logging.info("Company Details for %s scraped successfully.\n" % company.id )
+
+        print(company)
+        print("\n")
+        
+        if options["skipReviews"] is False:
+            print("Get reviews...")
+            company.reviews = scraper.scrape_company_reviews( companyID, save_to_db = options["saveToDatabase"] )
+            logging.info("Reviews for %s scraped successfully.\n" % company.id )
+            for i, review in enumerate(company.reviews, start=1):
+                print("Review# " + str(i))
+                print(review)
+                print("\n")
+        else:
+            print("Skiping reviews")
 
 if __name__ == '__main__':
 
@@ -422,12 +559,14 @@ if __name__ == '__main__':
     parser.add_argument("--no_of_threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
     parser.add_argument("--log_file", nargs='?', type=str, default=None, help="Path for log file. If not given, output will be printed on stdout.")
     parser.add_argument("--urls", nargs='*', help="url(s) for scraping. Separate by spaces")
+    parser.add_argument("--urls_from_file", nargs='?', type=str, help="Parse urls from file")
+    parser.add_argument("--skip_reviews", nargs='?', type=bool, default=False, help="Skip reviews if loaded by --urls or --urls_from_file")
     parser.add_argument("--save_to_db", nargs='?', type=bool, default=False, help="Boolean variable to save to db. Default False")
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
     args = parser.parse_args()
-
+    
     # setup logging based on arguments
     if args.log_file and platform == "linux" or platform == "linux2":
         logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
@@ -438,7 +577,6 @@ if __name__ == '__main__':
     else:
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     
-    scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
             scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
@@ -448,19 +586,16 @@ if __name__ == '__main__':
             scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
         else:
             scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
+    elif args.urls_from_file:
+        urls = []
+        with open( args.urls_from_file ) as file:
+            for line in file:
+                urls.append( line.strip() )
+                    
+        scrapeCompaniesInThreads( urls, { "saveToDatabase": args.save_to_db, "skipReviews":  args.skip_reviews, "threads": args.no_of_threads } )
+                    
     else:
-        for url in args.urls:
-            id = url.strip("/").split("/")[-1]
-            company = scraper.scrape_company_details(id, save_to_db=args.save_to_db)
-            logging.info("Company Details for %s scraped successfully.\n" % company.id)
-            print(company)
-            print("\n")
-            company.reviews = scraper.scrape_company_reviews(id, save_to_db=args.save_to_db)
-            logging.info("Reviews for %s scraped successfully.\n" % company.id)
-            for i, review in enumerate(company.reviews, start=1):
-                print("Review# " + str(i))
-                print(review)
-                print("\n")
+        scrapeCompaniesInThreads( args.urls, { "saveToDatabase": args.save_to_db, "skipReviews":  args.skip_reviews, "threads": args.no_of_threads } )
 
         
     
