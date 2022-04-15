@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `company` (
   `date_updated` datetime DEFAULT NULL,
   `status` varchar(7) DEFAULT NULL,
   `log` varchar(255) DEFAULT NULL,
+  `wiki_info` longtext DEFAULT NULL,
   PRIMARY KEY (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 
