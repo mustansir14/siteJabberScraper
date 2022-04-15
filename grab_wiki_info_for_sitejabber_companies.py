@@ -44,4 +44,5 @@ for company in companies:
     except Exception:
         cur.execute("update company set wiki_info = NULL where company_id = '%s'", (company_id))
         con.commit()
+        
         logging.info("Couldn't find company %s on Wikipedia" % company_name)
