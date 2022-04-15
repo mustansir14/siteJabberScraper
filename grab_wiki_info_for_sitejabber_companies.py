@@ -38,11 +38,10 @@ for company in companies:
         continue
     try:
         company_json = scraper.scrape_company(company_name)
-        cur.execute("update company set wiki_info = %s where company_id = %s", (str(company_json), company_id))
+        cur.execute("update company set wiki_info = '%s' where company_id = '%s'", (str(company_json), company_id))
         con.commit()
         logging.info("Wiki Info scraped and saved to DB for " + company_name)
     except Exception:
-        print("update company set wiki_info = '' where company_id = %s" % (company_id))
-        cur.execute("update company set wiki_info = '' where company_id = %s", (company_id))
+        cur.execute("update company set wiki_info = '' where company_id = '%s'", (company_id))
         con.commit()
         logging.info("Couldn't find company %s on Wikipedia" % company_name)
