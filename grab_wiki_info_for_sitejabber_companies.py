@@ -1,34 +1,15 @@
 from config import *
 from wikipedia_company_scraper import WikipediaScraper
 import logging, argparse
+from multiprocessing import Process
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 import warnings
 warnings.filterwarnings("ignore")
 
-parser = argparse.ArgumentParser(description="Grab Wikipedia Info for SiteJabber Companies")
-parser.add_argument("--skip_already_done", nargs='?', type=bool, default=False, help="Boolean variable to skip companies which are already done (Both found and not found). Default False.")
-args = parser.parse_args()
 
-if USE_MARIA_DB:
-    import mariadb
-    con = mariadb.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, db=DB_NAME)
-else:
-    import pymysql
-    con = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, db=DB_NAME, cursorclass=pymysql.cursors.DictCursor)
+def worker(companies, pid, skip_already_done, cur, con):
 
-cur = con.cursor()
-
-scraper = WikipediaScraper()
-
-chunksize = 2
-counter = 0
-while True:
-
-    cur.execute(f"SELECT company_id, company_name, wiki_info from company limit {counter*chunksize}, {chunksize};")
-    companies = cur.fetchall()
-
-    if len(companies) == 0:
-        break
+    scraper = WikipediaScraper()
 
     for company in companies:
 
@@ -40,16 +21,67 @@ while True:
             company_id = company["company_id"]
             company_name = company["company_name"]
             company_wiki_info = company["wiki_info"]
-
-        if args.skip_already_done and company_wiki_info is not None:
+        
+        if skip_already_done and company_wiki_info is not None:
             continue
         try:
             company_json = scraper.scrape_company(company_name)
-            cur.execute("update company set wiki_info = '%s' where company_id = '%s'", (str(company_json), company_id))
+            if USE_MARIA_DB:
+                query = "update company set wiki_info = '%s' where company_id = '%s'"
+            else:
+                query = "update company set wiki_info = %s where company_id = %s"
+            cur.execute(query, (str(company_json), company_id))
             con.commit()
-            logging.info("Wiki Info scraped and saved to DB for " + company_name)
+            logging.info("Process %s: Wiki Info scraped and saved to DB for %s" % (str(pid), company_name))
         except Exception:
-            cur.execute("update company set wiki_info = '' where company_id = '%s'", (company_id))
+            if USE_MARIA_DB:
+                query = "update company set wiki_info = '' where company_id = '%s'"
+            else:
+                query = "update company set wiki_info = '' where company_id = %s"
+            cur.execute(query, (company_id))
             con.commit()
-            
-            logging.info("Couldn't find company %s on Wikipedia" % company_name)
+            logging.info("Process %s: Couldn't find company %s on Wikipedia" % (str(pid), company_name))
+    
+    del scraper
+
+def split(a, n):
+    k, m = divmod(len(a), n)
+    return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Grab Wikipedia Info for SiteJabber Companies")
+    parser.add_argument("--skip_already_done", nargs='?', type=bool, default=False, help="Boolean variable to skip companies which are already done (Both found and not found). Default False.")
+    parser.add_argument("--no_of_threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
+    args = parser.parse_args()
+
+    if USE_MARIA_DB:
+        import mariadb
+        con = mariadb.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, db=DB_NAME)
+    else:
+        import pymysql
+        con = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, db=DB_NAME, cursorclass=pymysql.cursors.DictCursor)
+
+    cur = con.cursor()
+
+    chunksize = 5000
+    counter = 0
+    while True:
+
+        cur.execute(f"SELECT company_id, company_name, wiki_info from company limit {counter*chunksize}, {chunksize};")
+        companies = cur.fetchall()
+
+        if len(companies) == 0:
+            break
+
+        companies_chunks = split(companies, args.no_of_threads)
+
+        processes = []
+        for i, chunk in enumerate(companies_chunks):
+            processes.append(Process(target=worker, args=(chunk, i+1, args.skip_already_done, cur, con, )))
+            processes[-1].start()
+        
+        for process in processes:
+            process.join()
+
+        counter += 1
