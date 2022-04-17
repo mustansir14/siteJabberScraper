@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Grab Wikipedia Info for SiteJabber Companies")
     parser.add_argument("--skip_already_done", nargs='?', type=bool, default=False, help="Boolean variable to skip companies which are already done (Both found and not found). Default False.")
-    parser.add_argument("--no_of_threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
+    parser.add_argument("--threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
     args = parser.parse_args()
 
     if USE_MARIA_DB:
