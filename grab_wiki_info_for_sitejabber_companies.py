@@ -74,7 +74,7 @@ if __name__ == "__main__":
         if len(companies) == 0:
             break
 
-        companies_chunks = split(companies, args.no_of_threads)
+        companies_chunks = split(companies, args.threads)
 
         processes = []
         for i, chunk in enumerate(companies_chunks):
