@@ -1,5 +1,6 @@
 from config import *
 from wikipedia_company_scraper import WikipediaScraper
+from article_generator import generate_article
 import logging, argparse
 from multiprocessing import Process
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
@@ -26,6 +27,7 @@ def worker(companies, pid, skip_already_done, cur, con):
             continue
         try:
             company_json = scraper.scrape_company(company_name)
+            company_json["article"] = generate_article(company_json)
             if USE_MARIA_DB:
                 query = "update company set wiki_info = '%s' where company_id = '%s'"
             else:
