@@ -6,6 +6,7 @@ from multiprocessing import Process
 from config import *
 import logging, argparse
 from pyvirtualdisplay import Display
+from webdriver_manager.chrome import ChromeDriverManager
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 
 PROXY_HOST = '154.16.150.141'  # rotating proxy or host
@@ -80,7 +81,7 @@ def get_chromedriver(use_proxy=False):
             zp.writestr("manifest.json", manifest_json)
             zp.writestr("background.js", background_js)
         chrome_options.add_extension(pluginfile)
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options, executable_path=ChromeDriverManager().install())
     return driver
 
 def split(a, n):
