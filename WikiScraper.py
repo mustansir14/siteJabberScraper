@@ -50,10 +50,19 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
+def str_to_bool(value):
+    if isinstance(value, bool):
+        return value
+    if value.lower() in {'false', 'f', '0', 'no', 'n'}:
+        return False
+    elif value.lower() in {'true', 't', '1', 'yes', 'y'}:
+        return True
+    raise ValueError(f'{value} is not a valid boolean value')
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Grab Wikipedia Info for SiteJabber Companies")
-    parser.add_argument("--skip_already_done", nargs='?', type=bool, default=False, help="Boolean variable to skip companies which are already done (Both found and not found). Default False.")
+    parser.add_argument("--skip_already_done", nargs='?', type=str, default="False", help="Boolean variable to skip companies which are already done (Both found and not found). Default False.")
     parser.add_argument("--threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
     args = parser.parse_args()
 
@@ -80,7 +89,7 @@ if __name__ == "__main__":
 
         processes = []
         for i, chunk in enumerate(companies_chunks):
-            processes.append(Process(target=worker, args=(chunk, i+1, args.skip_already_done, cur, con, )))
+            processes.append(Process(target=worker, args=(chunk, i+1, str_to_bool(args.skip_already_done), cur, con, )))
             processes[-1].start()
         
         for process in processes:
