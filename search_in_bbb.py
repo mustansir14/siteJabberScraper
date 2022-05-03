@@ -117,7 +117,7 @@ def worker(companies, pid, skip_already_done, cur, con):
             if bbb_url is None or bbb_url.strip() == "":
                 raise Exception("Company not found on BBB")
             if USE_MARIA_DB:
-                query = "update company set bbb_url = '%s' where company_id = '%s'"
+                query = "update company set bbb_url = ? where company_id = ?"
             else:
                 query = "update company set bbb_url = %s where company_id = %s"
             cur.execute(query, (bbb_url, company_id))
@@ -125,7 +125,7 @@ def worker(companies, pid, skip_already_done, cur, con):
             logging.info("Process %s: BBB URL scraped and saved to DB for %s" % (str(pid), company_id))
         except:
             if USE_MARIA_DB:
-                query = "update company set bbb_url = '' where company_id = '%s'"
+                query = "update company set bbb_url = '' where company_id = '?'"
             else:
                 query = "update company set bbb_url = '' where company_id = %s"
             cur.execute(query, (company_id))
