@@ -22,7 +22,7 @@ class WikipediaScraper():
         if chromedriver_path:
             self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
         else:
-            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
+            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager(log_level=logging.ERROR).install(), options=options)
         self.driver.get("https://www.wikipedia.org/")
 
     def scrape_company(self, company_name, keywords=[]):

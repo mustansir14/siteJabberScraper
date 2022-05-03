@@ -81,7 +81,7 @@ def get_chromedriver(use_proxy=False):
             zp.writestr("manifest.json", manifest_json)
             zp.writestr("background.js", background_js)
         chrome_options.add_extension(pluginfile)
-    driver = webdriver.Chrome(options=chrome_options, executable_path=ChromeDriverManager().install())
+    driver = webdriver.Chrome(options=chrome_options, executable_path=ChromeDriverManager(log_level=logging.ERROR).install())
     return driver
 
 def split(a, n):
