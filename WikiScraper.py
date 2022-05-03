@@ -32,7 +32,7 @@ def worker(companies, pid, skip_already_done, cur, con):
             query = "update company set wiki_info = '%s' where company_id = '%s'"
         else:
             query = "update company set wiki_info = %s where company_id = %s"
-        cur.execute(query, (str(company_json), company_id))
+        cur.execute(query, (str(company_json), company_id, ))
         con.commit()
         logging.info("Process %s: Wiki Info scraped and saved to DB for %s" % (str(pid), company_name))
         # except Exception:
