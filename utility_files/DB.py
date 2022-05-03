@@ -1,6 +1,6 @@
-from config import *
+from utility_files.config import *
 from typing import List
-from models import Company, Review
+from utility_files.models import Company, Review
 import datetime
 if USE_MARIA_DB:
     import mariadb

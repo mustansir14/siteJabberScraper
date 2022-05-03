@@ -1,9 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import zipfile
-from DB import DB
+from utility_files.DB import DB
 from multiprocessing import Process
-from config import *
+from utility_files.config import *
 import logging, argparse
 from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager

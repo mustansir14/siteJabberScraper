@@ -8,8 +8,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.utils import ChromeType
 import time
 from typing import List
-from DB import DB
-from models import Company, Review
+from utility_files.DB import DB
+from utility_files.models import Company, Review
 import datetime
 import requests
 import os

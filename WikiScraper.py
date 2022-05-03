@@ -1,6 +1,6 @@
-from config import *
-from wikipedia_company_scraper import WikipediaScraper
-from article_generator import generate_article
+from utility_files.config import *
+from utility_files.wikipedia_company_scraper import WikipediaScraper
+from utility_files.article_generator import generate_article
 import logging, argparse
 from multiprocessing import Process
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
