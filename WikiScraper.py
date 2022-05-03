@@ -29,7 +29,7 @@ def worker(companies, pid, skip_already_done, cur, con):
             company_json = scraper.scrape_company(company_name)
         except Exception:
             if USE_MARIA_DB:
-                query = "update company set wiki_info = '' where company_id = ?"
+                query = "update company set wiki_info = '' where company_id = '?'"
             else:
                 query = "update company set wiki_info = '' where company_id = %s"
             cur.execute(query, (company_id))
