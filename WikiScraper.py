@@ -29,21 +29,19 @@ def worker(companies, pid, skip_already_done, cur, con):
             company_json = scraper.scrape_company(company_name)
         except Exception:
             if USE_MARIA_DB:
-                query = "update company set wiki_info = '' where company_id = '%s'"
+                query = "update company set wiki_info = '' where company_id = ?"
             else:
                 query = "update company set wiki_info = '' where company_id = %s"
             cur.execute(query, (company_id))
             con.commit()
             logging.info("Process %s: Couldn't find company %s on Wikipedia" % (str(pid), company_name))
             continue
-        
         company_json["article"] = generate_article(company_json)
         if USE_MARIA_DB:
-            query = "update company set wiki_info = '%s' where company_id = '%s'" % (str(company_json), company_id)
-            cur.execute(query)
+            query = "update company set wiki_info = ? where company_id = ?"
         else:
             query = "update company set wiki_info = %s where company_id = %s"
-            cur.execute(query, (str(company_json), company_id, ))
+        cur.execute(query, (str(company_json), company_id, ))
         con.commit()
         logging.info("Process %s: Wiki Info scraped and saved to DB for %s" % (str(pid), company_name))
         
