@@ -574,7 +574,7 @@ if __name__ == '__main__':
         logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     else:
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
-    
+    scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
             scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
