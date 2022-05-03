@@ -5,7 +5,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.utils import ChromeType
 import time
 from typing import List
 from utility_files.DB import DB
@@ -19,6 +18,7 @@ import sys
 import logging
 from multiprocessing import Process, Queue
 from sys import platform
+
 
 
 
@@ -48,7 +48,7 @@ class SiteJabberScraper():
         if chromedriver_path:
             self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
         else:
-            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
+            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager(log_level=logging.ERROR).install(), options=options)
         self.dealt_with_popup = False
         if not os.path.exists("file/logo/"):
             os.makedirs("file/logo")
@@ -337,23 +337,23 @@ class SiteJabberScraper():
  
         empty_file = False
         if get_urls_from_file:
-            with open("category_urls.json", "r") as f:
+            with open("temp/category_urls.json", "r") as f:
                 self.__total_categories_urls = json.load(f)
 
             if self.__total_categories_urls == {}:
                 empty_file = True
-
+        
         if not get_urls_from_file or empty_file:
             logging.info("Scraping Category URLs...")
             self.driver.get("https://www.sitejabber.com/categories")
             time.sleep(2)
             self.__collect_category_urls()
-            with open("category_urls.json", "w") as f:
+            with open("temp/category_urls.json", "w") as f:
                 json.dump(self.__total_categories_urls, f)
 
         if continue_from_last_scrape:
-            if os.path.isfile("last_scrape_info.json"):
-                with open("last_scrape_info.json", "r") as f:
+            if os.path.isfile("temp/last_scrape_info.json"):
+                with open("temp/last_scrape_info.json", "r") as f:
                     last_scrape = json.load(f)
         
                 last_company_url = last_scrape["url"]
@@ -373,7 +373,7 @@ class SiteJabberScraper():
             if not category_flag and last_category == category:
                 category_flag = True
             if category_flag:
-                logging.info("Scraping Category URLS...")
+                logging.info("Scraping URLS...")
                 company_urls = self.__scrape_company_urls_from_category(url)
                 urls_to_scrape = Queue()
                 for company_url in company_urls:
@@ -402,7 +402,7 @@ class SiteJabberScraper():
                         last_scrape = {}
                         last_scrape["url"] = company_url
                         last_scrape["category"] = category
-                        with open("last_scrape_info.json", "w") as f:
+                        with open("temp/last_scrape_info.json", "w") as f:
                             json.dump(last_scrape, f)
     
     def scrape_urls_from_queue(self, q, category, continue_from_last_scrape):
@@ -415,7 +415,7 @@ class SiteJabberScraper():
             last_scrape = {}
             last_scrape["url"] = company_url
             last_scrape["category"] = category
-            with open("last_scrape_info.json", "w") as f:
+            with open("temp/last_scrape_info.json", "w") as f:
                 json.dump(last_scrape, f)
         
         del scraper
@@ -576,11 +576,11 @@ if __name__ == '__main__':
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
-        if os.path.isfile("category_urls.json") and os.path.isfile("last_scrape_info.json"):
+        if os.path.isfile("temp/category_urls.json") and os.path.isfile("temp/last_scrape_info.json"):
             scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
-        elif os.path.isfile("category_urls.json"):
+        elif os.path.isfile("temp/category_urls.json"):
             scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
-        elif os.path.isfile("last_scrape_info.json"):
+        elif os.path.isfile("temp/last_scrape_info.json"):
             scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
         else:
             scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)

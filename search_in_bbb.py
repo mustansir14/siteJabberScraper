@@ -76,7 +76,7 @@ def get_chromedriver(use_proxy=False):
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36")
     if use_proxy:
-        pluginfile = 'proxy_auth_plugin.zip'
+        pluginfile = 'temp/proxy_auth_plugin.zip'
         with zipfile.ZipFile(pluginfile, 'w') as zp:
             zp.writestr("manifest.json", manifest_json)
             zp.writestr("background.js", background_js)
