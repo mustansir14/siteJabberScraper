@@ -44,7 +44,7 @@ class DB:
                     company.status, company.log, company.description, company.id)
                     success_statement = "Company " + company.id + " details updated successfully!"
                 else:
-                    sql = "INSERT INTO company VALUES (" + "%s, " * 26 + "%s);"
+                    sql = "INSERT INTO company VALUES (" + "%s, " * 28 + "%s);"
                     args = (company.id, company.name, company.url, company.logo, company.category1, 
                     company.category2, company.category3, company.email, company.phone, company.street_address1, company.street_address2, 
                     company.city, company.state, company.zip_code, company.country, company.wikipedia_url, company.facebook_url, company.twitter_url,
