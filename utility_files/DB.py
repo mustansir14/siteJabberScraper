@@ -30,7 +30,7 @@ class DB:
 
     def insert_or_update_company(self, company : Company):
         while True:
-            try:
+            # try:
                 self.cur.execute("SELECT company_id from company where company_id = %s;", (company.id,))
                 if len(self.cur.fetchall()) == 1:
                     sql = """UPDATE company set company_name = %s, url = %s, logo = %s, category1 = %s, category2 = %s, category3 = %s, email = %s, 
@@ -55,24 +55,24 @@ class DB:
                 self.con.commit()
                 logging.info(success_statement)
                 break
-            except Exception as e:
-                logging.error(e)
-                for i in range(3):
-                    logging.info("Reconnecting after 10 seconds")
-                    time.sleep(10)
-                    try:
-                        if USE_MARIA_DB:
-                            self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
-                        else:
-                            self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
-                        success = True
-                        self.cur = self.con.cursor()
-                        break
-                    except Exception as e:
-                        logging.error(e)
-                        success = False
-                if not success:
-                    raise Exception(e)
+            # except Exception as e:
+            #     logging.error(e)
+            #     for i in range(3):
+            #         logging.info("Reconnecting after 10 seconds")
+            #         time.sleep(10)
+            #         try:
+            #             if USE_MARIA_DB:
+            #                 self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
+            #             else:
+            #                 self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
+            #             success = True
+            #             self.cur = self.con.cursor()
+            #             break
+            #         except Exception as e:
+            #             logging.error(e)
+            #             success = False
+            #     if not success:
+            #         raise Exception(e)
 
 
     def insert_or_update_reviews(self, reviews : List[Review], page=None):
