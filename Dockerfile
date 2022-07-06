@@ -21,4 +21,4 @@ RUN pip install -r /app/requirements.txt
 
 COPY . /app
 WORKDIR /app
-ENTRYPOINT [ "python3", "SiteJabberScraper.py", "--bulk_scrape=True"]
+ENTRYPOINT [ "python3", "SiteJabberScraper.py", "--bulk_scrape=True", "--no_of_threads=5"]
