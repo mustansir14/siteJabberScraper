@@ -48,7 +48,7 @@ class SiteJabberScraper():
         if chromedriver_path:
             self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
         else:
-            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager(log_level=logging.ERROR).install(), options=options)
+            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
         self.dealt_with_popup = False
         if not os.path.exists("file/logo/"):
             os.makedirs("file/logo")
@@ -348,6 +348,8 @@ class SiteJabberScraper():
             self.driver.get("https://www.sitejabber.com/categories")
             time.sleep(2)
             self.__collect_category_urls()
+            if not os.path.isdir("temp"):
+                os.mkdir("temp")
             with open("temp/category_urls.json", "w") as f:
                 json.dump(self.__total_categories_urls, f)
 
@@ -375,7 +377,10 @@ class SiteJabberScraper():
             if category_flag:
                 logging.info("Scraping URLS...")
                 company_urls = self.__scrape_company_urls_from_category(url)
-                urls_to_scrape = Queue()
+                if platform == "linux" or platform == "linux2":
+                    urls_to_scrape = Queue()
+                else:
+                    urls_to_scrape = []
                 for company_url in company_urls:
                     if not url_flag and company_url == last_company_url:
                         url_flag = True
@@ -385,8 +390,10 @@ class SiteJabberScraper():
                             self.db.cur.execute("SELECT * from company where url = %s;", (company_url))
                             if len(self.db.cur.fetchall()) > 0:
                                 continue
-
-                        urls_to_scrape.put(company_url)
+                        if platform == "linux" or platform == "linux2":
+                            urls_to_scrape.put(company_url)
+                        else:
+                            urls_to_scrape.append(company_url)
                           
                 if platform == "linux" or platform == "linux2":
                     processes = []

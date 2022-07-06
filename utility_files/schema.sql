@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS `company` (
   `log` varchar(255) DEFAULT NULL,
   `wiki_info` longtext DEFAULT NULL,
   `bbb_url` varchar(500) DEFAULT NULL,
+  `bbb_check_date` Date DEFAULT NULL,
   PRIMARY KEY (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 

@@ -3,3 +3,5 @@ PyMySQL==1.0.2
 requests==2.25.1
 selenium==3.141.0
 mariadb==1.0.8
+pyvirtualdisplay==3.0
+webdriver_manager==3.8.0

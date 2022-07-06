@@ -1,3 +1,4 @@
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import zipfile
@@ -7,13 +8,17 @@ from utility_files.config import *
 import logging, argparse
 from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager
+import os
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 
-PROXY_HOST = '154.16.150.141'  # rotating proxy or host
+PROXY_HOST = '216.185.48.89'  # rotating proxy or host
 PROXY_PORT = 45785 # port
 PROXY_USER = 'Selmustansir2001' # username
 PROXY_PASS = 'G0o6PkY' # password
 
+db = DB()
+cur = db.cur
+con = db.con
 
 manifest_json = """
 {
@@ -81,34 +86,38 @@ def get_chromedriver(use_proxy=False):
             zp.writestr("manifest.json", manifest_json)
             zp.writestr("background.js", background_js)
         chrome_options.add_extension(pluginfile)
-    driver = webdriver.Chrome(options=chrome_options, executable_path=ChromeDriverManager(log_level=logging.ERROR).install())
+    driver = webdriver.Chrome(options=chrome_options, executable_path=ChromeDriverManager().install())
     return driver
 
 def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
-def worker(companies, pid, skip_already_done, cur, con):
+def worker(companies, pid):
 
+    global con
+    global cur
     driver = get_chromedriver(True)
 
     for company in companies:
 
         if USE_MARIA_DB:
             company_id = company[0]
-            bbb_url = company[1]
+            bbb_check_date = company[1]
         else:
             company_id = company["company_id"]
-            bbb_url = company["bbb_url"]
+            bbb_check_date = company["bbb_check_date"]
+
+        bbb_url = None
         
-        if skip_already_done and bbb_url is not None:
+        if bbb_check_date is not None and (datetime.now().date() - bbb_check_date).days < 7:
             continue
         try:
             try:
                 driver.get(f"https://www.bbb.org/search?find_country=USA&find_text={company_id}&page=1")
             except:
                 logging.error("Error loading page. Proxy might not be working")
-            name_tags = driver.find_elements(By.CLASS_NAME, "MuiTypography-root.Name-sc-135gl8f-0.jPuzee.MuiTypography-h4")
+            name_tags = driver.find_elements(By.CLASS_NAME, "MuiTypography-root.sc-yrgwp6-0.dDdJcz.MuiTypography-h4")
             for name_tag in name_tags:
                 if "advertisement" in name_tag.text:
                     continue
@@ -124,13 +133,14 @@ def worker(companies, pid, skip_already_done, cur, con):
             con.commit()
             logging.info("Process %s: BBB URL scraped and saved to DB for %s" % (str(pid), company_id))
         except:
-            if USE_MARIA_DB:
-                query = "update company set bbb_url = '' where company_id = '?'"
-            else:
-                query = "update company set bbb_url = '' where company_id = %s"
-            cur.execute(query, (company_id))
-            con.commit()
             logging.info("Process %s: Couldn't find company %s on BBB" % (str(pid), company_id))
+        if USE_MARIA_DB:
+            query = "update company set bbb_check_date = ? where company_id = ?"
+        else:
+            query = "update company set bbb_check_date = %s where company_id = %s"
+    
+        cur.execute(query, (datetime.now(), company_id, ))
+        con.commit()
 
     del driver
 
@@ -147,23 +157,18 @@ def str_to_bool(value):
 
 if __name__ == "__main__":
     
-    headless = True
-    if headless:
+    if os.name != "nt": # virtual display only on linux
         display = Display(visible=0, size=(1920, 1080))
         display.start()
     parser = argparse.ArgumentParser(description="Grab BBB URLs for SiteJabber Companies")
-    parser.add_argument("--skip_already_done", nargs='?', type=str, default="True", help="Boolean variable to skip companies which are already done (Both found and not found). Default True.")
     parser.add_argument("--threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
     args = parser.parse_args()
     
-    db = DB()
-    cur = db.cur
-    con = db.con
     chunksize = 5000
     counter = 0
     while True:
 
-        cur.execute(f"SELECT company_id, bbb_url from company limit {counter*chunksize}, {chunksize};")
+        cur.execute(f"SELECT company_id, bbb_check_date from company limit {counter*chunksize}, {chunksize};")
         companies = cur.fetchall()
 
         if len(companies) == 0:
@@ -173,7 +178,7 @@ if __name__ == "__main__":
 
         processes = []
         for i, chunk in enumerate(companies_chunks):
-            processes.append(Process(target=worker, args=(chunk, i+1, str_to_bool(args.skip_already_done), cur, con,)))
+            processes.append(Process(target=worker, args=(chunk, i+1,)))
             processes[-1].start()
         
         for process in processes:
