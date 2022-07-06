@@ -1,0 +1,17 @@
+{
+  "name": "grabber-sitejabberscraper",
+  "version": "1.0.1",
+  "main": "index.js",
+  "config": {
+    "hub": "22331234/private"
+  },
+  "scripts": {
+    "docker:clean": "cross-var python ./docker/remove-old-docker-image.py \"$npm_package_config_hub:$npm_package_name-$npm_package_version\"",
+    "docker:build": "npm run docker:clean && cross-var docker build -t \"$npm_package_config_hub:$npm_package_name-$npm_package_version\" .",
+    "docker:push": "cross-var docker push $npm_package_config_hub:$npm_package_name-$npm_package_version",
+    "docker:release": "npm run docker:build && npm run docker:push"
+  },
+  "dependencies": {
+    "cross-var": "^1.1.0"
+  }
+}
