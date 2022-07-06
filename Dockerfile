@@ -1,8 +1,5 @@
 FROM python:3.9
 
-COPY . /app
-WORKDIR /app
-
 # Adding trusting keys to apt for repositories
 RUN apt update
 RUN apt install -y wget gnupg
@@ -19,6 +16,9 @@ RUN apt-get install -y google-chrome-stable
 
 # Install connector
 RUN apt install -y libmariadb3 libmariadb-dev
-RUN pip install -r requirements.txt
+COPY requirements.txt /app/requirements.txt
+RUN pip install -r /app/requirements.txt
 
-CMD [ "python3", "SiteJabberScraper.py", "--bulk_scrape=True"]
+COPY . /app
+WORKDIR /app
+ENTRYPOINT [ "python3", "SiteJabberScraper.py", "--bulk_scrape=True"]
