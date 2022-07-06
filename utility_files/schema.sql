@@ -1,4 +1,3 @@
-CREATE DATABASE IF NOT EXISTS site_jabber;
 
 CREATE TABLE IF NOT EXISTS `company` (
   `company_id` varchar(255) NOT NULL,
