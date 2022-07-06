@@ -3,6 +3,7 @@
 ## Installation Guide
 
 1. If need to use mariaDB, install connector dependency first from here: https://mariadb.com/docs/clients/mariadb-connectors/connector-c/install/
+
 2. Install required libraries using "pip install -r requirements.txt"
 
 3. For selenium to work, you will need to have chromedriver in your path. Download chromedriver from https://chromedriver.chromium.org/
