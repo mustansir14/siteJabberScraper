@@ -19,9 +19,7 @@ import sys
 import logging
 from multiprocessing import Process, Queue
 from sys import platform
-
-
-
+logging.getLogger('WDM').setLevel(logging.ERROR)
 
 class SiteJabberScraper():
 
