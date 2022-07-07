@@ -44,12 +44,15 @@ class DB:
                     company.status, company.log, company.description, company.id)
                     success_statement = "Company " + company.id + " details updated successfully!"
                 else:
-                    sql = "INSERT INTO company VALUES (" + "%s, " * 29 + "%s);"
+                    sql = """INSERT INTO company (company_id, company_name, url, logo, category1, category2, category3, email, 
+                    phone, street_address1, street_address2, city, state, zip_code, country, wikipedia_url,
+                    facebook_url, twitter_url, linkedin_url, youtube_url, pinterest_url, instagram_url, date_created, date_updated,
+                    status, log, description) VALUES (""" + "%s, " * 26 + "%s);"
                     args = (company.id, company.name, company.url, company.logo, company.category1, 
                     company.category2, company.category3, company.email, company.phone, company.street_address1, company.street_address2, 
                     company.city, company.state, company.zip_code, company.country, company.wikipedia_url, company.facebook_url, company.twitter_url,
-                    company.linkedin_url, company.youtube_url, company.pinterest_url, company.instagram_url, company.description, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), company.status, company.log, None, None, None)
+                    company.linkedin_url, company.youtube_url, company.pinterest_url, company.instagram_url, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), company.status, company.log, company.description)
                     success_statement = "Company " + company.id + " details added to DB successfully!"
                 self.cur.execute(sql, args)
                 self.con.commit()
