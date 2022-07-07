@@ -1,0 +1,55 @@
+zabbix_export:
+  version: '6.0'
+  date: '2022-07-07T11:32:42Z'
+  groups:
+    -
+      uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
+      name: Templates/Applications
+  templates:
+    -
+      uuid: 2925c4d5a0174485b00ac0dda839a8d6
+      template: 'Grabber sitejabber'
+      name: 'Grabber sitejabber'
+      description: 'Sitejabber statistics'
+      groups:
+        -
+          name: Templates/Applications
+      items:
+        -
+          uuid: b9df7a9ee90f40999a6d0262ba073a4d
+          name: 'grabber-sitejabber: companies.inserted'
+          type: ZABBIX_ACTIVE
+          key: 'system.run["mysql -u {$GRABBER.SITEJABBER.MYSQL.USER} -p{$GRABBER.SITEJABBER.MYSQL.PASS} -D {$GRABBER.SITEJABBER.MYSQL.DB} -s -e \"select count(*) from company where date_created BETWEEN timestamp(curdate()) AND timestamp(curdate(),''23:59'')\" | tail -n +1"]'
+          delay: 1h
+          trends: '0'
+        -
+          uuid: f08646c7330a41e6821ad293ddf0f3fb
+          name: 'grabber-sitejabber: companies.updated'
+          type: ZABBIX_ACTIVE
+          key: 'system.run["mysql -u {$GRABBER.SITEJABBER.MYSQL.USER} -p{$GRABBER.SITEJABBER.MYSQL.PASS} -D {$GRABBER.SITEJABBER.MYSQL.DB} -s -e \"select count(*) from company where date_updated BETWEEN timestamp(curdate()) AND timestamp(curdate(),''23:59'')\" | tail -n +1"]'
+          delay: 1h
+          trends: '0'
+        -
+          uuid: da29e5fd22574159a49a3dea03dd206f
+          name: 'grabber-sitejabber: reviews.inserted'
+          type: ZABBIX_ACTIVE
+          key: 'system.run["mysql -u {$GRABBER.SITEJABBER.MYSQL.USER} -p{$GRABBER.SITEJABBER.MYSQL.PASS} -D {$GRABBER.SITEJABBER.MYSQL.DB} -s -e \"select count(*) from review where date_created BETWEEN timestamp(curdate()) AND timestamp(curdate(),''23:59'')\" | tail -n +1"]'
+          delay: 1h
+          trends: '0'
+        -
+          uuid: 7aef012220fd40239434d97c241d521c
+          name: 'grabber-sitejabber: reviews.updated'
+          type: ZABBIX_ACTIVE
+          key: 'system.run["mysql -u {$GRABBER.SITEJABBER.MYSQL.USER} -p{$GRABBER.SITEJABBER.MYSQL.PASS} -D {$GRABBER.SITEJABBER.MYSQL.DB} -s -e \"select count(*) from review where date_updated BETWEEN timestamp(curdate()) AND timestamp(curdate(),''23:59'')\" | tail -n +1"]'
+          delay: 1h
+          trends: '0'
+      macros:
+        -
+          macro: '{$GRABBER.SITEJABBER.MYSQL.DB}'
+          description: 'Mysql database name'
+        -
+          macro: '{$GRABBER.SITEJABBER.MYSQL.PASS}'
+          description: 'Mysql client password'
+        -
+          macro: '{$GRABBER.SITEJABBER.MYSQL.USER}'
+          description: 'Mysql client user'
