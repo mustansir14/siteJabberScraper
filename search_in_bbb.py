@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 import zipfile
 from utility_files.DB import DB
 from multiprocessing import Process
-from utility_files.config import *
+from share.config import *
 import logging, argparse
 from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager

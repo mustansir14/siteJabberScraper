@@ -1,4 +1,4 @@
-from utility_files.config import *
+from share.config import *
 from typing import List
 from utility_files.models import Company, Review
 import datetime

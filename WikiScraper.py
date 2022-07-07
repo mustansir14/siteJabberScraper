@@ -1,4 +1,4 @@
-from utility_files.config import *
+from share.config import *
 from utility_files.wikipedia_company_scraper import WikipediaScraper
 from utility_files.article_generator import generate_article
 import logging, argparse

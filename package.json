@@ -9,7 +9,9 @@
     "docker:clean": "cross-var python ./docker/remove-old-docker-image.py \"$npm_package_config_hub:$npm_package_name-$npm_package_version\"",
     "docker:build": "npm run docker:clean && cross-var docker build -t \"$npm_package_config_hub:$npm_package_name-$npm_package_version\" .",
     "docker:push": "cross-var docker push $npm_package_config_hub:$npm_package_name-$npm_package_version",
-    "docker:release": "npm run docker:build && npm run docker:push"
+    "docker:release": "npm run docker:build && npm run docker:push",
+    "docker:run": "cross-var docker run -d -v \"./share/:/app/\" \"$npm_package_config_hub:$npm_package_name-$npm_package_version\"",
+    "docker:build-run": "npm run docker:build && npm run docker:run"
   },
   "dependencies": {
     "cross-var": "^1.1.0"
