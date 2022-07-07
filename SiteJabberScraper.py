@@ -411,6 +411,8 @@ class SiteJabberScraper():
                         last_scrape["category"] = category
                         with open("temp/last_scrape_info.json", "w") as f:
                             json.dump(last_scrape, f)
+
+        logging.info("All Companies Scraped!")
     
     def scrape_urls_from_queue(self, q, category, continue_from_last_scrape):
 
