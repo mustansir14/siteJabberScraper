@@ -19,6 +19,10 @@ RUN apt install -y libmariadb3 libmariadb-dev
 COPY requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
 
+# Create logs
+RUN mkdir -p /var/log/grabbers/
+
 COPY . /app
 WORKDIR /app
-ENTRYPOINT [ "python3", "SiteJabberScraper.py", "--bulk_scrape=True", "--no_of_threads=5"]
+
+ENTRYPOINT [ "python3", "SiteJabberScraper.py", "--bulk_scrape=True", "--no_of_threads=5", "--log_file=/var/log/grabbers/sitejabber.log" ]
