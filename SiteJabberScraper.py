@@ -20,6 +20,7 @@ import logging
 from multiprocessing import Process, Queue
 from sys import platform
 logging.getLogger('WDM').setLevel(logging.ERROR)
+os.environ['WDM_LOG'] = "false"
 
 class SiteJabberScraper():
 
