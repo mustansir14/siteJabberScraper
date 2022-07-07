@@ -9,6 +9,7 @@ import time
 from typing import List
 from utility_files.DB import DB
 from utility_files.models import Company, Review
+from share.config import *
 import datetime
 import requests
 import os
@@ -18,9 +19,7 @@ import sys
 import logging
 from multiprocessing import Process, Queue
 from sys import platform
-
-
-
+logging.getLogger('WDM').setLevel(logging.ERROR)
 
 class SiteJabberScraper():
 
@@ -333,7 +332,7 @@ class SiteJabberScraper():
         return reviews
 
 
-    def bulk_scrape(self, get_urls_from_file=False, continue_from_last_scrape=False, skip_if_exists=False, no_of_threads=1):
+    def bulk_scrape(self, get_urls_from_file=False, skip_if_exists=False, no_of_threads=1):
  
         empty_file = False
         if get_urls_from_file:
@@ -352,83 +351,64 @@ class SiteJabberScraper():
                 os.mkdir("temp")
             with open("temp/category_urls.json", "w") as f:
                 json.dump(self.__total_categories_urls, f)
-
-        if continue_from_last_scrape:
-            if os.path.isfile("temp/last_scrape_info.json"):
-                with open("temp/last_scrape_info.json", "r") as f:
-                    last_scrape = json.load(f)
-        
-                last_company_url = last_scrape["url"]
-                last_category = last_scrape["category"]
-                category_flag = False
-            else:
-                logging.info("No backup file found. Scraping from beginning")
-                category_flag = True
-                last_scrape = {}
-        else:
-            category_flag = True
-            last_scrape = {}
             
-        url_flag = category_flag
         
         for category, url in self.__total_categories_urls.items():
-            if not category_flag and last_category == category:
-                category_flag = True
-            if category_flag:
-                logging.info("Scraping URLS...")
-                company_urls = self.__scrape_company_urls_from_category(url)
-                if platform == "linux" or platform == "linux2":
-                    urls_to_scrape = Queue()
-                else:
-                    urls_to_scrape = []
-                for company_url in company_urls:
-                    if not url_flag and company_url == last_company_url:
-                        url_flag = True
-                        continue
-                    if url_flag:
-                        if skip_if_exists:
-                            self.db.cur.execute("SELECT * from company where url = %s;", (company_url))
-                            if len(self.db.cur.fetchall()) > 0:
-                                continue
-                        if platform == "linux" or platform == "linux2":
-                            urls_to_scrape.put(company_url)
-                        else:
-                            urls_to_scrape.append(company_url)
-                          
-                if platform == "linux" or platform == "linux2":
-                    processes = []
-                    for i in range(no_of_threads):
-                        processes.append(Process(target=self.scrape_urls_from_queue, args=(urls_to_scrape, category, continue_from_last_scrape)))
-                        processes[i].start()
+            logging.info("Scraping URLS for category: " + category)
+            company_urls = self.__scrape_company_urls_from_category(url)
+            if platform == "linux" or platform == "linux2":
+                urls_to_scrape = Queue()
+            else:
+                urls_to_scrape = []
+            found_url = False
+            for company_url in company_urls:
 
-                    for i in range(no_of_threads):
-                        processes[i].join()
+                self.db.cur.execute("SELECT date_updated from company where url = %s", (company_url, ))
+                data = self.db.cur.fetchall()
+                if len(data) > 0:
+                    if USE_MARIA_DB:
+                        date_updated = data[0][0]
+                    else:
+                        date_updated = data[0]["date_updated"]
+                    if (date_updated - datetime.datetime.now()).days < 7:
+                        continue
+                found_url = True
+                if platform == "linux" or platform == "linux2":
+                    urls_to_scrape.put(company_url)
                 else:
-                    for company_url in urls_to_scrape:
-                        scraper.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
-                        last_scrape = {}
-                        last_scrape["url"] = company_url
-                        last_scrape["category"] = category
-                        with open("temp/last_scrape_info.json", "w") as f:
-                            json.dump(last_scrape, f)
+                    urls_to_scrape.append(company_url)
+                        
+            if not found_url:
+                logging.info("All Companies from category " + category + " are already updated!")
+                continue
+
+            if platform == "linux" or platform == "linux2":
+                processes = []
+                for i in range(no_of_threads):
+                    processes.append(Process(target=self.scrape_urls_from_queue, args=(urls_to_scrape, category)))
+                    processes[i].start()
+
+                for i in range(no_of_threads):
+                    processes[i].join()
+            else:
+                for company_url in urls_to_scrape:
+                    scraper.scrape_url(company_url, continue_from_last_page=True)
+
+            logging.info("All Companies from category " + category + " added/updated!")
+
+        logging.info("All Companies Scraped!")
     
-    def scrape_urls_from_queue(self, q, category, continue_from_last_scrape):
+    def scrape_urls_from_queue(self, q, category):
 
         scraper = SiteJabberScraper()
         
         while q.qsize():
             company_url = q.get()
-            scraper.scrape_url(company_url, continue_from_last_page=continue_from_last_scrape)
-            last_scrape = {}
-            last_scrape["url"] = company_url
-            last_scrape["category"] = category
-            with open("temp/last_scrape_info.json", "w") as f:
-                json.dump(last_scrape, f)
+            scraper.scrape_url(company_url, continue_from_last_page=True)
         
         del scraper
             
-        
-
+    
 
     def __collect_category_urls(self, category=None):
         if not category:
@@ -583,14 +563,10 @@ if __name__ == '__main__':
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
-        if os.path.isfile("temp/category_urls.json") and os.path.isfile("temp/last_scrape_info.json"):
-            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
-        elif os.path.isfile("temp/category_urls.json"):
-            scraper.bulk_scrape(get_urls_from_file=True, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
-        elif os.path.isfile("temp/last_scrape_info.json"):
-            scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=True, no_of_threads=args.no_of_threads)
+        if os.path.isfile("temp/category_urls.json"):
+            scraper.bulk_scrape(get_urls_from_file=True, no_of_threads=args.no_of_threads)
         else:
-            scraper.bulk_scrape(get_urls_from_file=False, continue_from_last_scrape=False, no_of_threads=args.no_of_threads)
+            scraper.bulk_scrape(get_urls_from_file=False, no_of_threads=args.no_of_threads)
     elif args.urls_from_file:
         urls = []
         with open( args.urls_from_file ) as file:
