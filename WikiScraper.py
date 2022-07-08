@@ -1,3 +1,9 @@
+##########################################
+# Coded by Mustansir Muzaffar
+# mustansir2001@gmail.com
+# +923333487952
+##########################################
+
 from share.config import *
 from utility_files.wikipedia_company_scraper import WikipediaScraper
 from utility_files.article_generator import generate_article
