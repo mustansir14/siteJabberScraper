@@ -1,3 +1,9 @@
+##########################################
+# Coded by Mustansir Muzaffar
+# mustansir2001@gmail.com
+# +923333487952
+##########################################
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.select import Select
@@ -20,6 +26,7 @@ import logging
 from multiprocessing import Process, Queue
 from sys import platform
 logging.getLogger('WDM').setLevel(logging.ERROR)
+os.environ['WDM_LOG'] = "false"
 
 class SiteJabberScraper():
 

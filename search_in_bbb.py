@@ -1,3 +1,9 @@
+##########################################
+# Coded by Mustansir Muzaffar
+# mustansir2001@gmail.com
+# +923333487952
+##########################################
+
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
