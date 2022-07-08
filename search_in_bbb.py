@@ -15,6 +15,7 @@ import logging, argparse
 from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager
 import os
+from sys import platform
 
 PROXY_HOST = '216.185.48.89'  # rotating proxy or host
 PROXY_PORT = 45785 # port
