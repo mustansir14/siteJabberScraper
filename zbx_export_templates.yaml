@@ -1,6 +1,6 @@
 zabbix_export:
   version: '6.0'
-  date: '2022-07-07T11:32:42Z'
+  date: '2022-07-08T11:07:40Z'
   groups:
     -
       uuid: a571c0d144b14fd4a87a9d9b2aa9fcd6
@@ -15,6 +15,20 @@ zabbix_export:
         -
           name: Templates/Applications
       items:
+        -
+          uuid: 8b9e50ba21254f47bd4857a1328a8024
+          name: 'grabber-sitejabber: company.bbb.checked.good'
+          type: ZABBIX_ACTIVE
+          key: 'system.run["mysql -u {$GRABBER.SITEJABBER.MYSQL.USER} -p{$GRABBER.SITEJABBER.MYSQL.PASS} -D {$GRABBER.SITEJABBER.MYSQL.DB} -s -e \"select count(*) from company where bbb_check_date=curdate() and bbb_url is not null\" | tail -n +1"]'
+          delay: 1h
+          trends: '0'
+        -
+          uuid: b01ff51627474eabae522d1b130a91db
+          name: 'grabber-sitejabber: company.bbb.checked.bad'
+          type: ZABBIX_ACTIVE
+          key: 'system.run["mysql -u {$GRABBER.SITEJABBER.MYSQL.USER} -p{$GRABBER.SITEJABBER.MYSQL.PASS} -D {$GRABBER.SITEJABBER.MYSQL.DB} -s -e \"select count(*) from company where bbb_check_date=curdate() and bbb_url is null\" | tail -n +1"]'
+          delay: 1h
+          trends: '0'
         -
           uuid: b9df7a9ee90f40999a6d0262ba073a4d
           name: 'grabber-sitejabber: companies.inserted'
