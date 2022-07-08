@@ -109,15 +109,11 @@ def worker(companies, pid):
 
         if USE_MARIA_DB:
             company_id = company[0]
-            bbb_check_date = company[1]
         else:
             company_id = company["company_id"]
-            bbb_check_date = company["bbb_check_date"]
 
         bbb_url = None
         
-        if bbb_check_date is not None and (datetime.now().date() - bbb_check_date).days < 7:
-            continue
         try:
             try:
                 driver.get(f"https://www.bbb.org/search?find_country=USA&find_text={company_id}&page=1")
@@ -174,7 +170,7 @@ if __name__ == "__main__":
     counter = 0
     while True:
 
-        cur.execute(f"SELECT company_id, bbb_check_date from company limit {counter*chunksize}, {chunksize};")
+        cur.execute(f"SELECT company_id from company where bbb_check_date is NULL or bbb_check_date <= date_sub(now(),interval 7 day ) limit {counter*chunksize}, {chunksize};")
         companies = cur.fetchall()
 
         if len(companies) == 0:
