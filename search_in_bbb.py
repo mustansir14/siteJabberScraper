@@ -9,7 +9,6 @@ import logging, argparse
 from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager
 import os
-logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
 
 PROXY_HOST = '216.185.48.89'  # rotating proxy or host
 PROXY_PORT = 45785 # port
@@ -162,7 +161,18 @@ if __name__ == "__main__":
         display.start()
     parser = argparse.ArgumentParser(description="Grab BBB URLs for SiteJabber Companies")
     parser.add_argument("--threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
+    parser.add_argument("--log_file", nargs='?', type=str, default=None, help="Path for log file. If not given, output will be printed on stdout.")
     args = parser.parse_args()
+    
+    # setup logging based on arguments
+    if args.log_file and platform == "linux" or platform == "linux2":
+        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    elif platform == "linux" or platform == "linux2":
+        logging.basicConfig(format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    elif args.log_file:
+        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    else:
+        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     
     chunksize = 5000
     counter = 0
