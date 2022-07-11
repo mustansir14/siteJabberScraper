@@ -185,6 +185,7 @@ if __name__ == "__main__":
         companies = cur.fetchall()
 
         if len(companies) == 0:
+            logging.info("All companies searched!! Exiting now")
             break
 
         companies_chunks = split(companies, args.threads)
