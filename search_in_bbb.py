@@ -124,6 +124,9 @@ def worker(companies, pid):
                 if "advertisement" in name_tag.text:
                     continue
                 bbb_url = name_tag.find_element(By.TAG_NAME, "a").get_attribute("href")
+                if "bbb" not in bbb_url:
+                    bbb_url = None
+                    continue
                 break
             if bbb_url is None or bbb_url.strip() == "":
                 raise Exception("Company not found on BBB")
