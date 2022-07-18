@@ -58,6 +58,8 @@ class SiteJabberScraper():
         self.dealt_with_popup = False
         if not os.path.exists("file/logo/"):
             os.makedirs("file/logo")
+        if not os.path.exists("file/review/"):
+            os.makedirs("file/review")
         self.db = DB()
 
 
@@ -295,6 +297,12 @@ class SiteJabberScraper():
                         except:
                             review.status = "error"
                             review.log += "error while scraping review stars\n"
+                        try:
+                            images = review_tag.find_element_by_class_name("review__photos").find_elements_by_tag_name("img")
+                            for image in images:
+                                review.images.append(image.get_attribute("data-src"))
+                        except:
+                            pass
                         review.review_page_no = page
                         reviews.append(review)
                         page_reviews.append(review)

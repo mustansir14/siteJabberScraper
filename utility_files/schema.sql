@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS `review` (
   `date_updated` datetime DEFAULT NULL,
   `status` varchar(7) DEFAULT NULL,
   `log` varchar(255) DEFAULT NULL,
+  `images` text DEFAULT NULL,
   PRIMARY KEY (`review_id`),
   KEY `company_id` (`company_id`),
   CONSTRAINT `review_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`company_id`)
