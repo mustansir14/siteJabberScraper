@@ -27,6 +27,8 @@ def grab_company():
             requests.post(webhook_url, json={"company_id": company_id, "status" : "success"})
         else:
             requests.post(webhook_url, json={"company_id": company_id, "status" : status, "log": log})
+
+        del scraper
         
     if "id" not in request.args:
         return json.dumps({"error" : "missing id argument"})
