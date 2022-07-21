@@ -28,7 +28,7 @@ def grab_company():
         else:
             requests.post(webhook_url, json={"company_id": company_id, "status" : status, "log": log})
 
-        del scraper
+        scraper.kill_chrome()
         
     if "id" not in request.args:
         return json.dumps({"error" : "missing id argument"})
@@ -61,6 +61,8 @@ def grab_review():
             requests.post(webhook_url, json={"review_id": review_id, "status" : "success"})
         else:
             requests.post(webhook_url, json={"review_id": review_id, "status" : status, "log": log})
+
+        scraper.kill_chrome()
         
     if "id" not in request.args:
         return json.dumps({"error" : "missing id argument"})

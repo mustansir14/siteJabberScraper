@@ -421,7 +421,7 @@ class SiteJabberScraper():
             company_url = q.get()
             scraper.scrape_url(company_url, continue_from_last_page=True)
         
-        del scraper
+        scraper.kill_chrome()
             
     
 
@@ -486,7 +486,7 @@ class SiteJabberScraper():
 
 
 
-    def __del__(self):
+    def kill_chrome(self):
         try:
             self.driver.quit()
         except:
@@ -499,7 +499,7 @@ def scrapeCompanyThread( urlsQueue, options ):
         companyUrl = urlsQueue.get()
         scrapeCompanyDataByID( scraper, companyUrl, options )
     
-    del scraper
+    scraper.kill_chrome()
 
 def scrapeCompaniesInThreads( urls, options ):
     print("Scrape in threads, urls: %d..." % ( len(urls) ) )
@@ -592,6 +592,8 @@ if __name__ == '__main__':
                     
     else:
         scrapeCompaniesInThreads( args.urls, { "saveToDatabase": args.save_to_db, "skipReviews":  args.skip_reviews, "threads": args.no_of_threads } )
+
+    scraper.kill_chrome()
 
         
     
