@@ -5,6 +5,7 @@
 ##########################################
 
 from datetime import datetime
+import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import zipfile
@@ -16,11 +17,6 @@ from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager
 import os
 from sys import platform
-
-PROXY_HOST = '216.185.48.89'  # rotating proxy or host
-PROXY_PORT = 45785 # port
-PROXY_USER = 'Selmustansir2001' # username
-PROXY_PASS = 'G0o6PkY' # password
 
 db = DB()
 cur = db.cur
@@ -137,6 +133,9 @@ def worker(companies, pid):
             cur.execute(query, (bbb_url, company_id))
             con.commit()
             logging.info("Process %s: BBB URL scraped and saved to DB for %s" % (str(pid), company_id))
+            logging.info("Process %s: Scraping %s using BBB API...")
+            res = requests.get(f"{BBB_API_URL.rstrip('/')}/api/v1/scrape/company?id={company_id}&sync=1")
+            logging.info(f"Process {str(pid)}: {res.json()}")
         except:
             logging.info("Process %s: Couldn't find company %s on BBB" % (str(pid), company_id))
         if USE_MARIA_DB:
