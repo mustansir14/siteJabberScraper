@@ -24,8 +24,6 @@ def flush_company_data():
     rows = db.queryArray( sql, (request.args["id"],))
     if rows is None:
         errors.append( "Internal error" )
-    elif len( rows ) == 0:
-        errors.append( "No companies with such id" )
         
     return response( errors, rows )
 
