@@ -13,21 +13,19 @@ def response( errors, data = None):
 
 @api.route('/api/v1/company', methods=['GET'])
 def flush_company_data():
-    if "name" not in request.args or len( request.args["name"] ) == 0:
-        return json.dumps({"error" : "missing name argument"})
+    if "id" not in request.args or len( request.args["id"] ) == 0:
+        return json.dumps({"error" : "missing id argument"})
         
     db = DB()
     errors = []
-    
-    print(db.host, db.user, db.password, db.db )
         
-    sql = 'select * from company where company_name=%s'
+    sql = 'select * from company where company_id=%s'
     
-    rows = db.queryArray( sql, (request.args["name"],))
+    rows = db.queryArray( sql, (request.args["id"],))
     if rows is None:
         errors.append( "Internal error" )
     elif len( rows ) == 0:
-        errors.append( "No companies with such name" )
+        errors.append( "No companies with such id" )
         
     return response( errors, rows )
 
