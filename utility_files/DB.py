@@ -21,6 +21,22 @@ class DB:
         else:
             self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
         self.cur = self.con.cursor()
+        
+    def getDbCursor(self):
+        if USE_MARIA_DB:
+            return self.con.cursor(dictionary=True)
+            
+        return self.con.cursor()
+    
+    def queryArray(self,sql,args):
+        cur = self.getDbCursor()
+        
+        cur.execute( sql,args )
+        rows = cur.fetchall()
+
+        cur.close()
+
+        return rows
 
     def delete_company( self, company: Company ):
         try:
