@@ -133,7 +133,7 @@ def worker(companies, pid):
             cur.execute(query, (bbb_url, company_id))
             con.commit()
             logging.info("Process %s: BBB URL scraped and saved to DB for %s" % (str(pid), company_id))
-            logging.info("Process %s: Scraping %s using BBB API...")
+            logging.info("Process %s: Scraping %s using BBB API..." % (str(pid), company_id))
             res = requests.get(f"{BBB_API_URL.rstrip('/')}/api/v1/scrape/company?id={company_id}&sync=1")
             logging.info(f"Process {str(pid)}: {res.json()}")
         except:
