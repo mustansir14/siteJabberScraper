@@ -146,7 +146,10 @@ def worker(companies, pid):
         cur.execute(query, (datetime.now(), company_id, ))
         con.commit()
 
-    del driver
+    try:
+        driver.quit()
+    except:
+        pass
 
 def str_to_bool(value):
     if isinstance(value, bool):
