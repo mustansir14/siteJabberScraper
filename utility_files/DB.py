@@ -8,6 +8,7 @@ else:
     import pymysql
 import logging
 import time
+import requests
 
 class DB:
 
@@ -103,6 +104,7 @@ class DB:
                         review.status = "success"
                     self.cur.execute("SELECT review_id from review where company_id = %s and review_date = %s and username = %s;", (review.company_id, review.date, review.username))
                     fetched_results = self.cur.fetchall()
+                    review_id = None
                     if len(fetched_results) >= 1:
                         if USE_MARIA_DB:
                             review_id = fetched_results[0][0]
@@ -118,8 +120,26 @@ class DB:
                         args = (review.company_id, review.date, review.username, review.no_of_helpful_votes, review.review_title, review.review_text, 
                         review.review_stars, review.review_page_no, datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 
                         review.status, review.log)
+
                     self.cur.execute(sql, args)
-                
+                    if not review_id:
+                        review_id = self.cur.lastrowid
+                    
+                    image_paths = []
+                    for i, image in enumerate(review.images):
+                        try:
+                            res = requests.get(image)
+                            filename = "file/review/" + str(review_id) + "_" + str(i) + ".jpg"
+                            with open(filename, "wb") as f:
+                                f.write(res.content)
+                            image_paths.append(filename)
+                        except Exception as e:
+                            logging.error("Error downloading review image: " + image)
+                            logging.error(e)
+                    
+                    if image_paths:
+                        self.cur.execute("UPDATE review set images = %s where review_id = %s", (str(image_paths), review_id, ))
+
                 if reviews:
                     self.con.commit()
                     if page:

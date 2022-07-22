@@ -58,6 +58,8 @@ class SiteJabberScraper():
         self.dealt_with_popup = False
         if not os.path.exists("file/logo/"):
             os.makedirs("file/logo")
+        if not os.path.exists("file/review/"):
+            os.makedirs("file/review")
         self.db = DB()
 
 
@@ -295,6 +297,12 @@ class SiteJabberScraper():
                         except:
                             review.status = "error"
                             review.log += "error while scraping review stars\n"
+                        try:
+                            images = review_tag.find_element_by_class_name("review__photos").find_elements_by_tag_name("img")
+                            for image in images:
+                                review.images.append(image.get_attribute("data-src"))
+                        except:
+                            pass
                         review.review_page_no = page
                         reviews.append(review)
                         page_reviews.append(review)
@@ -413,7 +421,7 @@ class SiteJabberScraper():
             company_url = q.get()
             scraper.scrape_url(company_url, continue_from_last_page=True)
         
-        del scraper
+        scraper.kill_chrome()
             
     
 
@@ -478,7 +486,7 @@ class SiteJabberScraper():
 
 
 
-    def __del__(self):
+    def kill_chrome(self):
         try:
             self.driver.quit()
         except:
@@ -491,7 +499,7 @@ def scrapeCompanyThread( urlsQueue, options ):
         companyUrl = urlsQueue.get()
         scrapeCompanyDataByID( scraper, companyUrl, options )
     
-    del scraper
+    scraper.kill_chrome()
 
 def scrapeCompaniesInThreads( urls, options ):
     print("Scrape in threads, urls: %d..." % ( len(urls) ) )
@@ -584,6 +592,8 @@ if __name__ == '__main__':
                     
     else:
         scrapeCompaniesInThreads( args.urls, { "saveToDatabase": args.save_to_db, "skipReviews":  args.skip_reviews, "threads": args.no_of_threads } )
+
+    scraper.kill_chrome()
 
         
     

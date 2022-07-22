@@ -72,6 +72,7 @@ class Review:
         self.review_page_no = None
         self.log = ""
         self.status = None
+        self.images = []
         
     def str( self, text ) -> str:
         # need set before export PYTHONIOENCODING=utf-8
