@@ -147,7 +147,7 @@ def worker(companies, pid):
             logging.info(f"Process {str(pid)}: {res.json()}")
             try:
                 if res.json()["success"] == False:
-                    query = "update company set bbb_url = null, bbb_check_date = null where company_id = ?"
+                    query = "update company set bbb_url = null where company_id = ?"
                     cur.execute(query, (company_id, ))
                     con.commit()
             except:
