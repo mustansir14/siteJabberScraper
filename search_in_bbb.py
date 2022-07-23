@@ -145,6 +145,13 @@ def worker(companies, pid):
             logging.info("Process %s: Scraping %s using BBB API..." % (str(pid), bbb_url))
             res = requests.get(f"{BBB_API_URL.rstrip('/')}/api/v1/scrape/company?id={bbb_url}&sync=1")
             logging.info(f"Process {str(pid)}: {res.json()}")
+            try:
+                if res.json()["success"] == False:
+                    query = "update company set bbb_url = null, bbb_check_date = null where company_id = ?"
+                    cur.execute(query, (company_id, ))
+                    con.commit()
+            except:
+                pass
         except:
             logging.info("Process %s: Couldn't find company %s on BBB" % (str(pid), company_id))
         if USE_MARIA_DB:
