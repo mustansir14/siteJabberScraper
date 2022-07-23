@@ -130,8 +130,17 @@ def worker(companies, pid):
                 query = "update company set bbb_url = ? where company_id = ?"
             else:
                 query = "update company set bbb_url = %s where company_id = %s"
-            cur.execute(query, (bbb_url, company_id))
-            con.commit()
+            while True:
+                try:
+                    cur.execute(query, (bbb_url, company_id))
+                    con.commit()
+                    break
+                except:
+                    count += 1
+                    if count == 3:
+                        raise Exception(e)
+                    logging.error(e)
+                    logging.info("Waiting for 10 seconds and trying again...")
             logging.info("Process %s: BBB URL scraped and saved to DB for %s" % (str(pid), company_id))
             logging.info("Process %s: Scraping %s using BBB API..." % (str(pid), bbb_url))
             res = requests.get(f"{BBB_API_URL.rstrip('/')}/api/v1/scrape/company?id={bbb_url}&sync=1")
@@ -143,8 +152,18 @@ def worker(companies, pid):
         else:
             query = "update company set bbb_check_date = %s where company_id = %s"
     
-        cur.execute(query, (datetime.now(), company_id, ))
-        con.commit()
+        count = 0
+        while True:
+            try:
+                cur.execute(query, (datetime.now(), company_id, ))
+                con.commit()
+                break
+            except Exception as e:
+                count += 1
+                if count == 3:
+                    raise Exception(e)
+                logging.error(e)
+                logging.info("Waiting for 10 seconds and trying again...")
 
     try:
         driver.quit()
