@@ -17,6 +17,7 @@ from pyvirtualdisplay import Display
 from webdriver_manager.chrome import ChromeDriverManager
 import os
 from sys import platform
+import time
 
 db = DB()
 cur = db.cur
@@ -171,6 +172,7 @@ def worker(companies, pid):
                     raise Exception(e)
                 logging.error(e)
                 logging.info("Waiting for 10 seconds and trying again...")
+                time.sleep(1)
 
     try:
         driver.quit()
@@ -211,8 +213,19 @@ if __name__ == "__main__":
     chunksize = 5000
     counter = 0
     while True:
-
-        cur.execute(f"SELECT company_id from company where bbb_check_date is NULL or bbb_check_date <= date_sub(now(),interval 7 day ) limit {counter*chunksize}, {chunksize};")
+        
+        count = 0
+        while True:
+            try:
+                cur.execute(f"SELECT company_id from company where bbb_check_date is NULL or bbb_check_date <= date_sub(now(),interval 7 day ) limit {counter*chunksize}, {chunksize};")
+                break
+            except Exception as e:
+                count += 1
+                if count == 3:
+                    raise Exception(e)
+                logging.error(e)
+                logging.info("Waiting for 10 seconds and trying again...")
+                time.sleep(10)
         companies = cur.fetchall()
 
         if len(companies) == 0:
