@@ -10,7 +10,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import zipfile
 from utility_files.DB import DB
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from share.config import *
 import logging, argparse
 from pyvirtualdisplay import Display
@@ -96,14 +96,15 @@ def split(a, n):
     k, m = divmod(len(a), n)
     return (a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n))
 
-def worker(companies, pid):
+def worker(queue, pid):
 
     global con
     global cur
     driver = get_chromedriver(True)
 
-    for company in companies:
+    while queue.qsize():
 
+        company = queue.get()
         if USE_MARIA_DB:
             company_id = company[0]
         else:
@@ -232,11 +233,13 @@ if __name__ == "__main__":
             logging.info("All companies searched!! Exiting now")
             break
 
-        companies_chunks = split(companies, args.threads)
+        queue = Queue()
+        for company in companies:
+            queue.put(company)
 
         processes = []
-        for i, chunk in enumerate(companies_chunks):
-            processes.append(Process(target=worker, args=(chunk, i+1,)))
+        for i in range(args.threads):
+            processes.append(Process(target=worker, args=(queue, i+1,)))
             processes[-1].start()
         
         for process in processes:
