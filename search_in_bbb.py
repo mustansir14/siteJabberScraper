@@ -169,11 +169,11 @@ def worker(queue, pid):
                 break
             except Exception as e:
                 count += 1
-                if count == 3:
+                if count == 4:
                     raise Exception(e)
                 logging.error(e)
                 logging.info("Waiting for 10 seconds and trying again...")
-                time.sleep(1)
+                time.sleep(10)
 
     try:
         driver.quit()
