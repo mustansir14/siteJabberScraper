@@ -19,10 +19,6 @@ import os
 from sys import platform
 import time
 
-db = DB()
-cur = db.cur
-con = db.con
-
 manifest_json = """
 {
     "version": "1.0.0",
@@ -98,8 +94,9 @@ def split(a, n):
 
 def worker(queue, pid):
 
-    global con
-    global cur
+    db = DB()
+    cur = db.cur
+    con = db.con
     driver = get_chromedriver(True)
 
     while queue.qsize():
@@ -211,6 +208,9 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
     
+    db = DB()
+    cur = db.cur
+    con = db.con
     chunksize = 5000
     counter = 0
     while True:
