@@ -90,17 +90,19 @@ class SiteJabberScraper():
         
         # get description
         try:
-            company.description = self.driver.find_element_by_class_name("url-business__description").get_attribute('innerText')
+            company.description = self.driver.find_element(By.CSS_SELECTOR, ".url-business__description").get_attribute('innerText')
         except Exception as e:
             company.description = ""
             
         # fill empty fields via ld+json
         try:
-            scripts = self.driver.find_elements_by_css_selector("script[type='application/ld+json']")
+            scripts = self.driver.find_elements(By.CSS_SELECTOR, "script[type='application/ld+json']")
             for script in scripts:
                 content = script.get_attribute("innerText").strip()
                 content = content.replace( "\n", "" ).replace( "\r", "" )
                 content = json.loads( content )
+                
+                company.name = content['name']
                 
                 if "@type" in content and content["@type"] == "Organization" and "address" in content:
                     addressData = content["address"]
@@ -118,7 +120,7 @@ class SiteJabberScraper():
             logging.error( "Error parsing ld+json: " + str(e) )
         
         try:
-            res = requests.get(self.driver.find_element_by_class_name("website-thumbnail__image.object-fit").get_attribute("src"))
+            res = requests.get(self.driver.find_element(By.CSS_SELECTOR, ".website-thumbnail__image.object-fit").get_attribute("src"))
             filename = "file/logo/" + company_id.replace("/", "_").replace(".", "_").replace("\\", "_") + ".jpg"
             with open(filename, "wb") as f:
                 f.write(res.content)
@@ -133,8 +135,7 @@ class SiteJabberScraper():
         time.sleep(1)
         
         try:
-            company.name = self.driver.find_element_by_id("name").get_attribute("value")
-            categories = self.driver.find_elements_by_class_name("suggest-categories__breadcrumb")
+            categories = self.driver.find_elements(By.CSS_SELECTOR, ".suggest-categories__breadcrumb")
             company.category1 = company.category2 = company.category3 = ""
 
             if len(categories) > 0:
@@ -144,38 +145,38 @@ class SiteJabberScraper():
             if len(categories) > 2:
                 company.category3 = categories[2].text.strip()
 
-            company.email = self.driver.find_element_by_id("location-email").get_attribute("value")
+            company.email = self.driver.find_element(By.CSS_SELECTOR, "#location-email").get_attribute("value")
             company.phone = ""
 
             wait_counter = 0
             while wait_counter < 5:
                 try:
-                    phone = self.driver.find_element_by_id("inpt_verification_phone").get_attribute("value").replace("(", "").replace(")", "").replace(" ", "").replace("-", "")
+                    phone = self.driver.find_element(By.CSS_SELECTOR, "#inpt_verification_phone").get_attribute("value").replace("(", "").replace(")", "").replace(" ", "").replace("-", "")
                     if not phone.strip():
                         company.phone = ""
                         break 
-                    country_code = Select(self.driver.find_element_by_id("inpt_verification_country")).first_selected_option.get_attribute("data-isd").replace("-", "")
+                    country_code = Select(self.driver.find_element(By.CSS_SELECTOR, "#inpt_verification_country")).first_selected_option.get_attribute("data-isd").replace("-", "")
                     company.phone =  country_code + phone 
                     break
                 except:
                     time.sleep(1)
                     wait_counter += 1
 
-            company.street_address1 = self.driver.find_element_by_id("location-street-address").get_attribute("value")
-            company.street_address2 = self.driver.find_element_by_id("location-street-address-2").get_attribute("value")
+            company.street_address1 = self.driver.find_element(By.CSS_SELECTOR, "#location-street-address").get_attribute("value")
+            company.street_address2 = self.driver.find_element(By.CSS_SELECTOR, "#location-street-address-2").get_attribute("value")
 
-            city = self.driver.find_element_by_id("location-city").get_attribute("value")
+            city = self.driver.find_element(By.CSS_SELECTOR, "#location-city").get_attribute("value")
             if city:
                 company.city = city
 
-            state = self.driver.find_element_by_id("location-state").get_attribute("value")
+            state = self.driver.find_element(By.CSS_SELECTOR, "#location-state").get_attribute("value")
             state = company.state.replace( "non-us", "" ) if company.state is not None else ""
             if state:
                 company.state = state
 
-            company.zip_code = self.driver.find_element_by_id("location-postal-code").get_attribute("value")
+            company.zip_code = self.driver.find_element(By.CSS_SELECTOR, "#location-postal-code").get_attribute("value")
 
-            country = self.driver.find_element_by_id("location-country").get_attribute("value")
+            country = self.driver.find_element(By.CSS_SELECTOR, "#location-country").get_attribute("value")
             if country:
                 company.country = country
 
@@ -183,13 +184,13 @@ class SiteJabberScraper():
             if not country and company.state and company.state.lower() in usStates:
                 company.country = "United States"
 
-            company.wikipedia_url = self.driver.find_element_by_id("wikipedia-url").get_attribute("value")
-            company.facebook_url = self.driver.find_element_by_id("facebook-url").get_attribute("value")
-            company.twitter_url = self.driver.find_element_by_id("twitter-url").get_attribute("value")
-            company.linkedin_url = self.driver.find_element_by_id("linkedin-url").get_attribute("value")
-            company.youtube_url = self.driver.find_element_by_id("youtube-url").get_attribute("value")
-            company.pinterest_url = self.driver.find_element_by_id("pinterest-url").get_attribute("value")
-            company.instagram_url = self.driver.find_element_by_id("instagram-url").get_attribute("value")
+            company.wikipedia_url = self.driver.find_element(By.CSS_SELECTOR, "#wikipedia-url").get_attribute("value")
+            company.facebook_url = self.driver.find_element(By.CSS_SELECTOR, "#facebook-url").get_attribute("value")
+            company.twitter_url = self.driver.find_element(By.CSS_SELECTOR, "#twitter-url").get_attribute("value")
+            company.linkedin_url = self.driver.find_element(By.CSS_SELECTOR, "#linkedin-url").get_attribute("value")
+            company.youtube_url = self.driver.find_element(By.CSS_SELECTOR, "#youtube-url").get_attribute("value")
+            company.pinterest_url = self.driver.find_element(By.CSS_SELECTOR, "#pinterest-url").get_attribute("value")
+            company.instagram_url = self.driver.find_element(By.CSS_SELECTOR, "#instagram-url").get_attribute("value")
             
             if company.zip_code and company.country and ( not company.state or not company.city ):
                 zipDataUrl = "http://www.vcharges.com/get-zip.php?country=" + requests.utils.quote( company.country ) + "&zip=" + requests.utils.quote( company.zip_code ) + "&type=all&output=json"
@@ -224,6 +225,7 @@ class SiteJabberScraper():
             logging.info("Scraping review with id %s for %s" % (scrape_specific_review, company_id))
         else:
             logging.info("Scraping reviews for " + company_id)
+            
         review_url = "https://www.sitejabber.com/reviews/" + company_id
         self.driver.get(review_url)
         
@@ -241,71 +243,88 @@ class SiteJabberScraper():
                 logging.info("Moving to page " + str(last_page+1) + "...")
             except:
                 pass
+                
         reviews = []
         page = 1
         while True:
             if not last_page or (last_page and page > last_page):
                 page_reviews = []
+                
                 logging.info("Page " + str(page))
+                
                 if not self.dealt_with_popup:
                     try:
                         popup = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "ad-popup__dialog.ad-popup__widget")))
-                        popup.find_element_by_class_name("ad-popup__widget__title_close").click()
+                        popup.find_element(By.CSS_SELECTOR, ".ad-popup__widget__title_close").click()
                         self.dealt_with_popup = True
                     except:
                         pass
                     try:
-                        self.driver.find_element_by_class_name("cookie-consent__close").click()
+                        self.driver.find_element(By.CSS_SELECTOR, ".cookie-consent__close").click()
                     except:
                         pass
-                review_tags = self.driver.find_elements_by_class_name("review")
+                        
+                review_tags = self.driver.find_elements(By.CSS_SELECTOR, ".review")
                 for review_tag in review_tags:
-                    username = review_tag.find_element_by_class_name("review__author__name").text.strip()
+                    username = review_tag.find_element(By.CSS_SELECTOR, ".review__author__name").text.strip()
+                    
                     if scrape_specific_review and username != review_results[0]["username"]:
                         continue
                     try:
-                        helpful_count = int(review_tag.find_element_by_class_name("helpful__count").text.strip("()"))
+                        helpful_count = int(review_tag.find_element(By.CSS_SELECTOR, ".helpful__count").text.strip("()"))
                     except:
                         helpful_count = 0
-                    review_contents = review_tag.find_elements_by_class_name("review__content")
+                        
+                    review_contents = review_tag.find_elements(By.CSS_SELECTOR, ".review__content")
+                    
                     for review_content in review_contents:
                         review = Review()
                         review.company_id = company_id
                         review.username = username
+                        
                         try:
-                            date = review_content.find_element_by_class_name("review__date").text.strip().replace("st,", "").replace("nd,", "").replace("rd,", "").replace("th,", "")
+                            date = review_content.find_element(By.CSS_SELECTOR, ".review__date").text.strip().replace("st,", "").replace("nd,", "").replace("rd,", "").replace("th,", "")
                             review.date = datetime.datetime.strptime(date, "%B %d %Y").strftime('%Y-%m-%d')
                         except:
                             review.date = None
                             review.log += "Error while scraping/parsing date\n"
                             review.status = "error"
+                            
                         if scrape_specific_review and str(review.date) != str(review_results[0]["review_date"]):
                             continue
+                            
                         review.no_of_helpful_votes = helpful_count
+                        
                         try:
-                            review.review_title = review_content.find_element_by_class_name("review__title__text").text.strip()
+                            review.review_title = review_content.find_element(By.CSS_SELECTOR, ".review__title__text").text.strip()
                         except:
                             review.review_title = ""
                             review.status = "error"
                             review.log += "error while scraping review title\n"
+                            
                         try:
-                            review.review_text = review_content.find_element_by_class_name("review__text").find_element_by_tag_name("p").text.strip()
-                        except:
+                            review.review_text = review_content.find_element(By.CSS_SELECTOR, ".review__text").find_element(By.TAG_NAME, "p").text.strip()
+                        except Exception as e:
                             review.review_text = ""
+                            
                         try:
-                            review.review_stars = float(review_content.find_element_by_class_name("stars").get_attribute("title").split()[0])
+                            review.review_stars = float(review_content.find_element(By.CSS_SELECTOR, ".stars").get_attribute("title").split()[0])
                         except:
                             review.status = "error"
                             review.log += "error while scraping review stars\n"
+                            
                         try:
-                            images = review_tag.find_element_by_class_name("review__photos").find_elements_by_tag_name("img")
+                            images = review_tag.find_element(By.CSS_SELECTOR, ".review__photos").find_elements(By.TAG_NAME, "img")
                             for image in images:
                                 review.images.append(image.get_attribute("data-src"))
                         except:
                             pass
+                            
                         review.review_page_no = page
                         reviews.append(review)
+                        
                         page_reviews.append(review)
+                        
                         if scrape_specific_review:
                             got_review = True
                             break
@@ -317,7 +336,7 @@ class SiteJabberScraper():
                     break
             
             try:
-                next_page = self.driver.find_element_by_class_name("pagination__next").find_element_by_class_name("pagination__button--enabled")
+                next_page = self.driver.find_element(By.CSS_SELECTOR, ".pagination__next").find_element(By.CSS_SELECTOR, ".pagination__button--enabled")
 
                 scroll_to_center = """var viewPortHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0); 
                                     var elementTop = arguments[0].getBoundingClientRect().top; 
@@ -328,8 +347,8 @@ class SiteJabberScraper():
                 try:
                     next_page.click()
                 except:
-                    popup = self.driver.find_element_by_class_name("ad-popup__dialog.ad-popup__widget")
-                    popup.find_element_by_class_name("ad-popup__widget__title_close").click()
+                    popup = self.driver.find_element(By.CSS_SELECTOR, ".ad-popup__dialog.ad-popup__widget")
+                    popup.find_element(By.CSS_SELECTOR, ".ad-popup__widget__title_close").click()
                     self.dealt_with_popup = True
                     next_page.click()
                 
@@ -451,9 +470,9 @@ class SiteJabberScraper():
                                     window.scrollBy(0, elementTop-(viewPortHeight/2));"""
                     self.driver.execute_script(scroll_to_center, category)
                     time.sleep(1)
-                    category.find_element_by_tag_name("a").click()
+                    category.find_element(By.CSS_SELECTOR, "a").click()
                 time.sleep(0.5)
-                categories = category.find_elements_by_class_name("categories-browse__list__item")
+                categories = category.find_elements(By.CSS_SELECTOR, ".categories-browse__list__item")
         for category in categories:
             self.__collect_category_urls(category)
 
@@ -464,10 +483,10 @@ class SiteJabberScraper():
         company_urls = []
         while True:
 
-            company_blocks = self.driver.find_elements_by_class_name("url-list__item__content")
-            company_urls += [block.find_element_by_tag_name("a").get_attribute("href") for block in company_blocks]
+            company_blocks = self.driver.find_elements(By.CSS_SELECTOR, ".url-list__item__content")
+            company_urls += [block.find_element(By.TAG_NAME, "a").get_attribute("href") for block in company_blocks]
             try:
-                next_page = self.driver.find_element_by_class_name("pagination__next").find_element_by_tag_name("a")
+                next_page = self.driver.find_element(By.CSS_SELECTOR, ".pagination__next").find_element_by_tag_name("a")
                 scroll_to_center = """var viewPortHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0); 
                                 var elementTop = arguments[0].getBoundingClientRect().top; 
                                 window.scrollBy(0, elementTop-(viewPortHeight/2));"""
@@ -476,7 +495,7 @@ class SiteJabberScraper():
                 next_page.click()
                 time.sleep(1)
                 while True:
-                    if self.driver.find_element_by_class_name("categories-view__loading").get_attribute("style") == "":
+                    if self.driver.find_element(By.CSS_SELECTOR, ".categories-view__loading").get_attribute("style") == "":
                         break
                     time.sleep(1)
             except:
