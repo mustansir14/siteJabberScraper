@@ -22,7 +22,7 @@ import os
 import argparse
 import json
 import sys
-import logging
+import logging, traceback
 from multiprocessing import Process, Queue
 from sys import platform
 logging.getLogger('WDM').setLevel(logging.ERROR)
@@ -79,7 +79,7 @@ class SiteJabberScraper():
 
     def scrape_company_details(self, company_id, save_to_db=True) -> Company:
 
-        logging.info("Scraping Company Details for " + company_id)
+        logging.info("Scraping Company Details for " + "https://www.sitejabber.com/reviews/" + company_id)
         
         company = Company()
         
@@ -102,8 +102,6 @@ class SiteJabberScraper():
                 content = content.replace( "\n", "" ).replace( "\r", "" )
                 content = json.loads( content )
                 
-                company.name = content['name']
-                
                 if "@type" in content and content["@type"] == "Organization" and "address" in content:
                     addressData = content["address"]
 
@@ -115,9 +113,12 @@ class SiteJabberScraper():
 
                     if "addressCountry" in addressData:
                         company.country = addressData["addressCountry"]["name"]
+                        
+                        
+                    company.name = content['name']
             
         except Exception as e:
-            logging.error( "Error parsing ld+json: " + str(e) )
+            logging.error(traceback.format_exc())
         
         try:
             res = requests.get(self.driver.find_element(By.CSS_SELECTOR, ".website-thumbnail__image.object-fit").get_attribute("src"))
@@ -227,7 +228,27 @@ class SiteJabberScraper():
             logging.info("Scraping reviews for " + company_id)
             
         review_url = "https://www.sitejabber.com/reviews/" + company_id
+        logging.info(review_url)
+
         self.driver.get(review_url)
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "#business_owners")
+            )
+        )
+
+        logging.info("set sorting...")
+
+        # change sort newest to oldest
+        searchForm = self.driver.find_element(By.CSS_SELECTOR, '#UrlReviewsFiltersForm')
+        self.driver.execute_script("arguments[0].scrollIntoView();", searchForm)
+        time.sleep(1)
+
+        sortSelectBoxIt = self.driver.find_element(By.ID,"sortSelectBoxIt")
+        self.driver.execute_script("arguments[0].click();", sortSelectBoxIt)
+        time.sleep(1)
+
+        self.driver.find_element(By.CSS_SELECTOR,"#sortSelectBoxItOptions li[data-val='published']").click()
         
         if scrape_specific_review:
             self.db.cur.execute("SELECT username, review_date from review where review_id = %s", (scrape_specific_review))
@@ -254,22 +275,28 @@ class SiteJabberScraper():
                 
                 if not self.dealt_with_popup:
                     try:
+                        logging.info("Dealt popup delay...")
+
                         popup = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "ad-popup__dialog.ad-popup__widget")))
                         popup.find_element(By.CSS_SELECTOR, ".ad-popup__widget__title_close").click()
                         self.dealt_with_popup = True
                     except:
                         pass
+
                     try:
                         self.driver.find_element(By.CSS_SELECTOR, ".cookie-consent__close").click()
                     except:
                         pass
                         
                 review_tags = self.driver.find_elements(By.CSS_SELECTOR, ".review")
+                logging.info("Total reviews: " + str(len(review_tags)))
+
                 for review_tag in review_tags:
                     username = review_tag.find_element(By.CSS_SELECTOR, ".review__author__name").text.strip()
                     
                     if scrape_specific_review and username != review_results[0]["username"]:
                         continue
+
                     try:
                         helpful_count = int(review_tag.find_element(By.CSS_SELECTOR, ".helpful__count").text.strip("()"))
                     except:
@@ -336,31 +363,19 @@ class SiteJabberScraper():
                     break
             
             try:
-                next_page = self.driver.find_element(By.CSS_SELECTOR, ".pagination__next").find_element(By.CSS_SELECTOR, ".pagination__button--enabled")
+                logging.info("Next page...")
 
-                scroll_to_center = """var viewPortHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0); 
-                                    var elementTop = arguments[0].getBoundingClientRect().top; 
-                                    window.scrollBy(0, elementTop-(viewPortHeight/2));"""
-
-                self.driver.execute_script(scroll_to_center, next_page)
-                time.sleep(1)
-                try:
-                    next_page.click()
-                except:
-                    popup = self.driver.find_element(By.CSS_SELECTOR, ".ad-popup__dialog.ad-popup__widget")
-                    popup.find_element(By.CSS_SELECTOR, ".ad-popup__widget__title_close").click()
-                    self.dealt_with_popup = True
-                    next_page.click()
-                
-                time.sleep(0.5)
-                WebDriverWait(self.driver, 10).until(EC.invisibility_of_element_located((By.CLASS_NAME, "blockUI.blockOverlay")))
-                time.sleep(1)
-                page += 1
-
-            
+                self.driver.execute_script("document.querySelector('.pagination__next .pagination__button--enabled').click();")
             except:
+                logging.info("No more pages, break")
                 break
 
+            page += 1
+
+            # https://www.sitejabber.com/reviews/chicme.com has 240k reviews, max 1000 reviews scrape, in page 25 reviews = 1000 / 25 = 40
+            if page > 40:
+                logging.info("page > 40, break")
+                break
         
             
         return reviews
@@ -523,7 +538,7 @@ def scrapeCompanyThread( urlsQueue, options ):
 def scrapeCompaniesInThreads( urls, options ):
     print("Scrape in threads, urls: %d..." % ( len(urls) ) )
 
-    if options["threads"] > 1 and ( platform == "linux" or platform == "linux2" ):
+    if options["threads"] > 1:
         urlsQueue = Queue()
 
         for url in urls:
