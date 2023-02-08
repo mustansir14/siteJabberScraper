@@ -10,12 +10,13 @@ from selenium.webdriver.support.select import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from pyvirtualdisplay import Display
 import time
 from typing import List
 from utility_files.DB import DB
 from utility_files.models import Company, Review
-from share.config import *
 import datetime
 import requests
 import os
@@ -31,32 +32,31 @@ os.environ['WDM_LOG'] = "false"
 class SiteJabberScraper():
 
     def __init__(self, chromedriver_path=None) -> None:
+        if os.name != "nt":
+            self.display = Display(visible=0, size=(1920, 1080))
+            self.display.start()
+            
         options = Options()
         # need to set sort 
-        options.headless = False
         options.add_argument("window-size=1920,1080")
         options.add_argument("--log-level=3")
         options.add_argument("--no-sandbox")
+        options.add_argument('--disable-gpu')
         options.add_argument('--disable-dev-shm-usage')
-        
-        if os.name != "nt":
-            # https://peter.sh/experiments/chromium-command-line-switches/
-            
-            options.add_argument('--disable-extensions');
-            options.add_argument('--single-process'); # one process to take less memory
-            options.add_argument('--renderer-process-limit=1'); # do not allow take more resources
-            options.add_argument('--disable-crash-reporter'); # disable crash reporter process
-            options.add_argument('--no-zygote'); # disable zygote process
-        
-        # cpu optimization
-        options.add_argument('--enable-low-res-tiling');
+        # options.add_argument('--single-process'); # one process to take less memory
+        options.add_argument('--renderer-process-limit=1'); # do not allow take more resources
+        options.add_argument('--disable-crash-reporter'); # disable crash reporter process
+        options.add_argument('--no-zygote'); # disable zygote process
+        options.add_argument('--disable-crashpad')
         
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36")
         if chromedriver_path:
-            self.driver = webdriver.Chrome(executable_path=chromedriver_path, options=options)
+            self.driver = webdriver.Chrome(service=Service(chromedriver_path), options=options)
         else:
-            self.driver = webdriver.Chrome(executable_path=ChromeDriverManager().install(), options=options)
+            self.driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
+            
         self.dealt_with_popup = False
+        
         if not os.path.exists("file/logo/"):
             os.makedirs("file/logo")
         if not os.path.exists("file/review/"):
@@ -416,10 +416,7 @@ class SiteJabberScraper():
                 self.db.cur.execute("SELECT date_updated from company where url = %s", (company_url, ))
                 data = self.db.cur.fetchall()
                 if len(data) > 0:
-                    if USE_MARIA_DB:
-                        date_updated = data[0][0]
-                    else:
-                        date_updated = data[0]["date_updated"]
+                    date_updated = data[0][0]
                     if (date_updated - datetime.datetime.now()).days < 7:
                         continue
                 found_url = True
@@ -592,7 +589,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="SiteGrabberScraper CLI to grab company and reviews from URL")
     parser.add_argument("--bulk_scrape", nargs='?', type=bool, default=False, help="Boolean variable to bulk scrape companies. Default False. If set to True, save_to_db will also be set to True")
     parser.add_argument("--no_of_threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
-    parser.add_argument("--log_file", nargs='?', type=str, default=None, help="Path for log file. If not given, output will be printed on stdout.")
     parser.add_argument("--urls", nargs='*', help="url(s) for scraping. Separate by spaces")
     parser.add_argument("--urls_from_file", nargs='?', type=str, help="Parse urls from file")
     parser.add_argument("--skip_reviews", nargs='?', type=bool, default=False, help="Skip reviews if loaded by --urls or --urls_from_file")
@@ -602,15 +598,11 @@ if __name__ == '__main__':
         sys.exit(1)
     args = parser.parse_args()
     
-    # setup logging based on arguments
-    if args.log_file and platform == "linux" or platform == "linux2":
-        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
-    elif platform == "linux" or platform == "linux2":
-        logging.basicConfig(format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
-    elif args.log_file:
-        logging.basicConfig(filename=args.log_file, filemode='a',format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
-    else:
-        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    logging.basicConfig(handlers=[
+        logging.FileHandler("logs/SiteJabberScraper.py.log"),
+        logging.StreamHandler()
+    ], format='%(asctime)s Process ID %(process)d: %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.INFO)
+    
     scraper = SiteJabberScraper()
     if args.bulk_scrape:
         if os.path.isfile("temp/category_urls.json"):

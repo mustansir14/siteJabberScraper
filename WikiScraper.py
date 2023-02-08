@@ -19,34 +19,22 @@ def worker(companies, pid, skip_already_done, cur, con):
     scraper = WikipediaScraper()
 
     for company in companies:
-
-        if USE_MARIA_DB:
-            company_id = company[0]
-            company_name = company[1]
-            company_wiki_info = company[2]
-        else:
-            company_id = company["company_id"]
-            company_name = company["company_name"]
-            company_wiki_info = company["wiki_info"]
+        company_id = company[0]
+        company_name = company[1]
+        company_wiki_info = company[2]
         
         if skip_already_done and company_wiki_info is not None:
             continue
         try:
             company_json = scraper.scrape_company(company_name)
         except Exception:
-            if USE_MARIA_DB:
-                query = "update company set wiki_info = '' where company_id = '?'"
-            else:
-                query = "update company set wiki_info = '' where company_id = %s"
+            query = "update company set wiki_info = '' where company_id = '?'"
             cur.execute(query, (company_id))
             con.commit()
             logging.info("Process %s: Couldn't find company %s on Wikipedia" % (str(pid), company_name))
             continue
         company_json["article"] = generate_article(company_json)
-        if USE_MARIA_DB:
-            query = "update company set wiki_info = ? where company_id = ?"
-        else:
-            query = "update company set wiki_info = %s where company_id = %s"
+        query = "update company set wiki_info = ? where company_id = ?"
         cur.execute(query, (str(company_json), company_id, ))
         con.commit()
         logging.info("Process %s: Wiki Info scraped and saved to DB for %s" % (str(pid), company_name))
@@ -74,12 +62,8 @@ if __name__ == "__main__":
     parser.add_argument("--threads", nargs='?', type=int, default=1, help="No of threads to run. Default 1")
     args = parser.parse_args()
 
-    if USE_MARIA_DB:
-        import mariadb
-        con = mariadb.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, db=DB_NAME)
-    else:
-        import pymysql
-        con = pymysql.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, db=DB_NAME, cursorclass=pymysql.cursors.DictCursor)
+    import mariadb
+    con = mariadb.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, db=DB_NAME)
 
     cur = con.cursor()
 

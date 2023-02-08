@@ -1,0 +1,18 @@
+version: "3"
+services:
+  docker_sitejabber:
+    build: .
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+    deploy:
+      resources:
+        limits:
+          cpus: "5"
+          memory: 5024M
+          volumes:
+        - ./logs/:/www/logs/
+        - ./file/:/www/file/
+        

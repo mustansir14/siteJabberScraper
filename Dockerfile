@@ -1,28 +1,25 @@
-FROM python:3.9
+FROM python:3.11.1-bullseye
 
-# Adding trusting keys to apt for repositories
-RUN apt update
-RUN apt install -y wget gnupg
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+WORKDIR /www
 
-# Adding Google Chrome to the repositories
-RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+RUN apt-get update
+RUN pip3 install --upgrade pip
+RUN apt install -y wget curl gpg
 
-# Updating apt to see and install Google Chrome
-RUN apt-get -y update
+RUN wget https://r.mariadb.com/downloads/mariadb_repo_setup
+RUN chmod +x mariadb_repo_setup
+RUN ./mariadb_repo_setup --mariadb-server-version="mariadb-10.9"
 
-# Magic happens
-RUN apt-get install -y google-chrome-stable
-
-# Install connector
 RUN apt install -y libmariadb3 libmariadb-dev
-COPY requirements.txt /app/requirements.txt
-RUN pip install -r /app/requirements.txt
+RUN apt install -y xvfb
 
-# Create logs
-RUN mkdir -p /var/log/grabbers/
+RUN wget -qO - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list
+RUN apt-get update && apt-get install -y google-chrome-stable
 
-COPY . /app
+COPY ./install/requirements.txt ./install/requirements.txt
+RUN pip3 install -r ./install/requirements.txt
 
-WORKDIR /app
-ENTRYPOINT [ "python3", "SiteJabberScraper.py", "--bulk_scrape=True", "--no_of_threads=5" ]
+COPY . /www
+
+ENTRYPOINT [ "python3", "SiteJabberScraper.py", "--save_to_db=True", "--urls_from_file=urls.txt", "--no_of_threads=5" ]

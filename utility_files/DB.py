@@ -1,33 +1,23 @@
-from share.config import *
 from typing import List
 from utility_files.models import Company, Review
 import datetime
-if USE_MARIA_DB:
-    import mariadb
-else:
-    import pymysql
+import mariadb
 import logging
 import time
-import requests
+import requests, os
 
 class DB:
 
     def __init__(self):
-        self.host = DB_HOST
-        self.user = DB_USER
-        self.password = DB_PASSWORD
-        self.db = DB_NAME
-        if USE_MARIA_DB:
-            self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
-        else:
-            self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
+        self.host = os.getenv('DB_HOST')
+        self.user = os.getenv('DB_USER')
+        self.password = os.getenv('DB_PASS')
+        self.db = os.getenv('DB_NAME')
+        self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
         self.cur = self.con.cursor()
         
     def getDbCursor(self):
-        if USE_MARIA_DB:
-            return self.con.cursor(dictionary=True)
-            
-        return self.con.cursor()
+        return self.con.cursor(dictionary=True)
     
     def queryArray(self,sql,args):
         cur = self.getDbCursor()
@@ -81,10 +71,7 @@ class DB:
                     logging.info("Reconnecting after 10 seconds")
                     time.sleep(10)
                     try:
-                        if USE_MARIA_DB:
-                            self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
-                        else:
-                            self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
+                        self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
                         success = True
                         self.cur = self.con.cursor()
                         break
@@ -106,10 +93,7 @@ class DB:
                     fetched_results = self.cur.fetchall()
                     review_id = None
                     if len(fetched_results) >= 1:
-                        if USE_MARIA_DB:
-                            review_id = fetched_results[0][0]
-                        else:
-                            review_id = fetched_results[0]["review_id"]
+                        review_id = fetched_results[0][0]
                         sql = """UPDATE review SET no_of_helpful_votes = %s, review_title = %s, review_text = %s, review_stars = %s, review_page_no = %s,
                         date_updated = %s , status = %s, log = %s where review_id = %s"""
                         args = (review.no_of_helpful_votes, review.review_title, review.review_text, review.review_stars, review.review_page_no,
@@ -154,10 +138,7 @@ class DB:
                     logging.info("Reconnecting after 10 seconds")
                     time.sleep(10)
                     try:
-                        if USE_MARIA_DB:
-                            self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
-                        else:
-                            self.con = pymysql.connect(host=self.host, user=self.user, password=self.password, db=self.db, cursorclass=pymysql.cursors.DictCursor)
+                        self.con = mariadb.connect(host=self.host, user=self.user, password=self.password, db=self.db)
                         self.cur = self.con.cursor()
                         success = True
                         break

@@ -102,10 +102,7 @@ def worker(queue, pid):
     while queue.qsize():
 
         company = queue.get()
-        if USE_MARIA_DB:
-            company_id = company[0]
-        else:
-            company_id = company["company_id"]
+        company_id = company[0]
 
         bbb_url = None
         
@@ -125,10 +122,7 @@ def worker(queue, pid):
                 break
             if bbb_url is None or bbb_url.strip() == "":
                 raise Exception("Company not found on BBB")
-            if USE_MARIA_DB:
-                query = "update company set bbb_url = ? where company_id = ?"
-            else:
-                query = "update company set bbb_url = %s where company_id = %s"
+            query = "update company set bbb_url = ? where company_id = ?"
             while True:
                 try:
                     cur.execute(query, (bbb_url, company_id))
@@ -153,10 +147,7 @@ def worker(queue, pid):
                 pass
         except:
             logging.info("Process %s: Couldn't find company %s on BBB" % (str(pid), company_id))
-        if USE_MARIA_DB:
-            query = "update company set bbb_check_date = ? where company_id = ?"
-        else:
-            query = "update company set bbb_check_date = %s where company_id = %s"
+        query = "update company set bbb_check_date = ? where company_id = ?"
     
         count = 0
         while True:
